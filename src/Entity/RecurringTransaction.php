@@ -18,6 +18,9 @@ class RecurringTransaction
     #[ORM\Column]
     private ?int $id = null;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $hiddenFromForecast = false;
+
     /** @var Collection<int, RecurringAmountOverride> */
     #[ORM\OneToMany(targetEntity: RecurringAmountOverride::class, mappedBy: 'recurringTransaction', cascade: ['persist'], orphanRemoval: true)]
     private Collection $amountOverrides;
@@ -49,6 +52,19 @@ class RecurringTransaction
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /**
+     * Hidden transactions still count towards the balance but are not listed on the forecast.
+     */
+    public function isHiddenFromForecast(): bool
+    {
+        return $this->hiddenFromForecast;
+    }
+
+    public function setHiddenFromForecast(bool $hiddenFromForecast): void
+    {
+        $this->hiddenFromForecast = $hiddenFromForecast;
     }
 
     public function getDescription(): string

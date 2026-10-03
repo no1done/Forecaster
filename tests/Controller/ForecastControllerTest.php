@@ -41,6 +41,25 @@ final class ForecastControllerTest extends BrowserTestCase
     }
 
     #[Test]
+    public function hiddenTransactionsAreNotListedButStillChangeTheBalance(): void
+    {
+        $savings = new RecurringTransaction('Savings', -20000, Frequency::Monthly, self::date('2026-10-05'));
+        $savings->setHiddenFromForecast(true);
+        $this->persist(
+            new BalanceCheckpoint(self::date('2026-09-30'), 100000),
+            $savings,
+            new AdHocTransaction('New tyres', -40000, self::date('2026-10-05')),
+        );
+
+        $crawler = $this->client->request('GET', '/');
+
+        $day = $crawler->filter('tr[data-date="2026-10-05"]');
+        self::assertStringContainsString('New tyres', $day->text());
+        self::assertStringNotContainsString('Savings', $day->text());
+        self::assertSame('£400.00', $day->filter('.balance')->text());
+    }
+
+    #[Test]
     public function itAsksForAStartingBalanceWhenThereIsNone(): void
     {
         $this->client->request('GET', '/');

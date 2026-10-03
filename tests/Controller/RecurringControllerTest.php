@@ -55,6 +55,26 @@ final class RecurringControllerTest extends BrowserTestCase
     }
 
     #[Test]
+    public function itCanBeHiddenFromTheForecastAndShownAgain(): void
+    {
+        $this->persist($savings = new RecurringTransaction('Savings', -20000, Frequency::Monthly, self::date('2026-10-05')));
+
+        $this->client->request('GET', '/recurring/'.$savings->getId().'/edit');
+        self::assertCheckboxNotChecked('recurring[hiddenFromForecast]');
+        $this->client->submitForm('Save', ['recurring[hiddenFromForecast]' => true]);
+
+        self::assertTrue($this->all(RecurringTransaction::class)[0]->isHiddenFromForecast());
+        $this->client->request('GET', '/recurring');
+        self::assertSelectorTextContains('table', 'Hidden from forecast');
+
+        $this->client->request('GET', '/recurring/'.$savings->getId().'/edit');
+        self::assertCheckboxChecked('recurring[hiddenFromForecast]');
+        $this->client->submitForm('Save', ['recurring[hiddenFromForecast]' => false]);
+
+        self::assertFalse($this->all(RecurringTransaction::class)[0]->isHiddenFromForecast());
+    }
+
+    #[Test]
     public function itRejectsInvalidDetails(): void
     {
         $this->client->request('GET', '/recurring/new');

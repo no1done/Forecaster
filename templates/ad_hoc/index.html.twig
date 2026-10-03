@@ -16,7 +16,10 @@
             {% for transaction in transactions %}
                 <tr>
                     <td class="nowrap">{{ transaction.date|date('D j M Y') }}</td>
-                    <td><a href="{{ path('ad_hoc_edit', {id: transaction.id}) }}">{{ transaction.description }}</a></td>
+                    <td>
+                        <a href="{{ path('ad_hoc_edit', {id: transaction.id}) }}">{{ transaction.description }}</a>
+                        {% if transaction.hiddenFromForecast %}<span class="tag">Hidden from forecast</span>{% endif %}
+                    </td>
                     <td class="amount {{ transaction.amountPence < 0 ? 'out' : 'in' }}">{{ transaction.amountPence|pence }}</td>
                     <td class="actions">
                         {{ include('_delete_button.html.twig', {action: path('ad_hoc_delete', {id: transaction.id}), confirm: 'Delete ' ~ transaction.description ~ '?'}) }}

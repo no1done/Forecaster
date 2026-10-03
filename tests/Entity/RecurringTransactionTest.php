@@ -16,6 +16,12 @@ final class RecurringTransactionTest extends TestCase
     }
 
     #[Test]
+    public function itIsShownOnTheForecastByDefault(): void
+    {
+        self::assertFalse(self::electricity()->isHiddenFromForecast());
+    }
+
+    #[Test]
     public function aOneOffAmountAppliesToThatOccurrenceOnly(): void
     {
         $electricity = self::electricity();

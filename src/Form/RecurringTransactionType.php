@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Forecast\Recurrence\Frequency;
 use App\Form\Data\RecurringTransactionData;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
@@ -37,6 +38,11 @@ final class RecurringTransactionType extends AbstractType
                 'input' => 'datetime_immutable',
                 'required' => false,
                 'help' => 'Leave blank if it carries on.',
+            ])
+            ->add('hiddenFromForecast', CheckboxType::class, [
+                'label' => 'Hide from the forecast',
+                'help' => 'It still counts towards the balance, it just is not listed.',
+                'required' => false,
             ])
             ->add('save', SubmitType::class, ['label' => 'Save']);
     }

@@ -23,7 +23,10 @@
             <tbody>
                 {% for item in recurring %}
                     <tr>
-                        <td><a href="{{ path('recurring_edit', {id: item.id}) }}">{{ item.description }}</a></td>
+                        <td>
+                            <a href="{{ path('recurring_edit', {id: item.id}) }}">{{ item.description }}</a>
+                            {% if item.hiddenFromForecast %}<span class="tag">Hidden from forecast</span>{% endif %}
+                        </td>
                         <td>
                             {% if item.interval > 1 %}Every {{ item.interval }} {{ item.frequency.unit }}{% if item.frequency.value == 'last_working_day_of_month' %}, last working day{% endif %}{% else %}{{ item.frequency.label }}{% endif %}
                             <span class="muted">

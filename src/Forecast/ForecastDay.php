@@ -15,4 +15,12 @@ final readonly class ForecastDay
         public bool $isCheckpoint,
     ) {
     }
+
+    /**
+     * @return list<Movement> the movements to list, leaving out hidden ones
+     */
+    public function visibleMovements(): array
+    {
+        return array_values(array_filter($this->movements, static fn (Movement $m) => !$m->hidden));
+    }
 }

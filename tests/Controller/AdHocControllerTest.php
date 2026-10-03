@@ -51,6 +51,23 @@ final class AdHocControllerTest extends BrowserTestCase
     }
 
     #[Test]
+    public function itCanBeHiddenFromTheForecast(): void
+    {
+        $this->client->request('GET', '/ad-hoc/new');
+        self::assertCheckboxNotChecked('ad_hoc[hiddenFromForecast]');
+        $this->client->submitForm('Save', [
+            'ad_hoc[description]' => 'Surprise present',
+            'ad_hoc[amountPence][amount]' => '50',
+            'ad_hoc[date]' => '2026-10-15',
+            'ad_hoc[hiddenFromForecast]' => true,
+        ]);
+
+        self::assertTrue($this->all(AdHocTransaction::class)[0]->isHiddenFromForecast());
+        $this->client->request('GET', '/ad-hoc');
+        self::assertSelectorTextContains('#upcoming', 'Hidden from forecast');
+    }
+
+    #[Test]
     public function itRejectsMissingDetails(): void
     {
         $this->client->request('GET', '/ad-hoc/new');

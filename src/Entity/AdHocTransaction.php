@@ -19,6 +19,9 @@ class AdHocTransaction
     #[ORM\Column]
     private ?int $id = null;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $hiddenFromForecast = false;
+
     public function __construct(
         #[ORM\Column(length: 255)]
         private string $description,
@@ -35,6 +38,19 @@ class AdHocTransaction
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /**
+     * Hidden transactions still count towards the balance but are not listed on the forecast.
+     */
+    public function isHiddenFromForecast(): bool
+    {
+        return $this->hiddenFromForecast;
+    }
+
+    public function setHiddenFromForecast(bool $hiddenFromForecast): void
+    {
+        $this->hiddenFromForecast = $hiddenFromForecast;
     }
 
     public function getDescription(): string
@@ -69,6 +85,6 @@ class AdHocTransaction
 
     public function toMovement(): Movement
     {
-        return new Movement($this->date, $this->amountPence, $this->description, adHocTransactionId: $this->id);
+        return new Movement($this->date, $this->amountPence, $this->description, adHocTransactionId: $this->id, hidden: $this->hiddenFromForecast);
     }
 }

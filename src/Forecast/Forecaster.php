@@ -45,6 +45,7 @@ final class Forecaster
                     recurringTransactionId: $recurring->getId(),
                     scheduledDate: $occurrence->scheduledDate,
                     usualAmountPence: $recurring->getAmountPence(),
+                    hidden: $recurring->isHiddenFromForecast(),
                 );
             }
         }

@@ -17,6 +17,8 @@ final readonly class Movement
         public ?\DateTimeImmutable $scheduledDate = null,
         /** For a recurring movement, its amount when there is no one-off change. */
         public ?int $usualAmountPence = null,
+        /** Counts towards the balance but is not listed on the forecast. */
+        public bool $hidden = false,
     ) {
     }
 

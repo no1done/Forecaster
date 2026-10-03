@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Form\Data\AdHocTransactionData;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -18,6 +19,11 @@ final class AdHocTransactionType extends AbstractType
             ->add('description', TextType::class)
             ->add('amountPence', SignedAmountType::class)
             ->add('date', DateType::class, ['input' => 'datetime_immutable'])
+            ->add('hiddenFromForecast', CheckboxType::class, [
+                'label' => 'Hide from the forecast',
+                'help' => 'It still counts towards the balance, it just is not listed.',
+                'required' => false,
+            ])
             ->add('save', SubmitType::class, ['label' => 'Save']);
     }
 

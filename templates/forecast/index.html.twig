@@ -34,7 +34,7 @@
                         </td>
                         <td>
                             <ul class="movements">
-                                {% for movement in day.movements %}
+                                {% for movement in day.visibleMovements %}
                                     <li>
                                         <span class="description">
                                             {% if movement.recurringTransactionId %}

@@ -103,6 +103,23 @@ final class ForecasterTest extends KernelTestCase
     }
 
     #[Test]
+    public function hiddenTransactionsStillCountTowardsTheBalance(): void
+    {
+        $savings = new RecurringTransaction('Savings', -20000, Frequency::Monthly, self::date('2026-10-05'));
+        $savings->setHiddenFromForecast(true);
+        $gift = new AdHocTransaction('Surprise present', -5000, self::date('2026-10-05'));
+        $gift->setHiddenFromForecast(true);
+        $this->persist(new BalanceCheckpoint(self::date('2026-10-01'), 100000), $savings, $gift);
+
+        $day = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-10-05')))['2026-10-05'];
+
+        self::assertSame(75000, $day->balancePence);
+        self::assertSame([], $day->visibleMovements());
+        self::assertTrue($day->movements[0]->hidden);
+        self::assertTrue($day->movements[1]->hidden);
+    }
+
+    #[Test]
     public function itNeedsAStartingBalance(): void
     {
         $this->expectException(NoStartingBalance::class);

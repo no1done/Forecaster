@@ -28,6 +28,8 @@ final class RecurringTransactionData
     #[Assert\GreaterThanOrEqual(propertyPath: 'startDate', message: 'The end date must be on or after the start date.')]
     public ?\DateTimeImmutable $endDate = null;
 
+    public bool $hiddenFromForecast = false;
+
     public static function fromEntity(RecurringTransaction $recurring): self
     {
         $data = new self();
@@ -37,13 +39,17 @@ final class RecurringTransactionData
         $data->interval = $recurring->getInterval();
         $data->startDate = $recurring->getStartDate();
         $data->endDate = $recurring->getEndDate();
+        $data->hiddenFromForecast = $recurring->isHiddenFromForecast();
 
         return $data;
     }
 
     public function toEntity(): RecurringTransaction
     {
-        return new RecurringTransaction($this->description, $this->amountPence, $this->frequency, $this->startDate, $this->interval, $this->endDate);
+        $recurring = new RecurringTransaction($this->description, $this->amountPence, $this->frequency, $this->startDate, $this->interval, $this->endDate);
+        $recurring->setHiddenFromForecast($this->hiddenFromForecast);
+
+        return $recurring;
     }
 
     public function applyTo(RecurringTransaction $recurring): void
@@ -54,5 +60,6 @@ final class RecurringTransactionData
         $recurring->setInterval($this->interval);
         $recurring->setStartDate($this->startDate);
         $recurring->setEndDate($this->endDate);
+        $recurring->setHiddenFromForecast($this->hiddenFromForecast);
     }
 }
