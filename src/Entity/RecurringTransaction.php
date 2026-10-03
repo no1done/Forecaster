@@ -21,9 +21,9 @@ class RecurringTransaction
     #[ORM\Column(options: ['default' => false])]
     private bool $hiddenFromForecast = false;
 
-    /** @var Collection<int, RecurringAmountOverride> */
-    #[ORM\OneToMany(targetEntity: RecurringAmountOverride::class, mappedBy: 'recurringTransaction', cascade: ['persist'], orphanRemoval: true)]
-    private Collection $amountOverrides;
+    /** @var Collection<int, RecurringOccurrenceOverride> */
+    #[ORM\OneToMany(targetEntity: RecurringOccurrenceOverride::class, mappedBy: 'recurringTransaction', cascade: ['persist'], orphanRemoval: true)]
+    private Collection $occurrenceOverrides;
 
     public function __construct(
         #[ORM\Column(length: 255)]
@@ -46,7 +46,7 @@ class RecurringTransaction
         #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
         private ?\DateTimeImmutable $endDate = null,
     ) {
-        $this->amountOverrides = new ArrayCollection();
+        $this->occurrenceOverrides = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -133,15 +133,15 @@ class RecurringTransaction
     }
 
     /**
-     * @return Collection<int, RecurringAmountOverride>
+     * @return Collection<int, RecurringOccurrenceOverride>
      */
-    public function getAmountOverrides(): Collection
+    public function getOccurrenceOverrides(): Collection
     {
-        return $this->amountOverrides;
+        return $this->occurrenceOverrides;
     }
 
     /**
-     * The amount for one occurrence, identified by the date it was scheduled for.
+     * The amount for the occurrence the rule schedules on $scheduledDate.
      */
     public function getAmountPenceFor(\DateTimeImmutable $scheduledDate): int
     {
@@ -149,37 +149,72 @@ class RecurringTransaction
     }
 
     /**
-     * Change the amount of a single occurrence. Zero skips it; the usual
-     * amount removes the one-off.
+     * The date the occurrence scheduled on $scheduledDate was moved to, if it was.
+     */
+    public function getMovedDateFor(\DateTimeImmutable $scheduledDate): ?\DateTimeImmutable
+    {
+        return $this->findOverride($scheduledDate)?->getDate();
+    }
+
+    /**
+     * Occurrences moved to another date, keyed by scheduled date (Y-m-d).
+     *
+     * @return array<string, \DateTimeImmutable>
+     */
+    public function getMovedDates(): array
+    {
+        $moved = [];
+        foreach ($this->occurrenceOverrides as $override) {
+            if (null !== $override->getDate()) {
+                $moved[$override->getScheduledDate()->format('Y-m-d')] = $override->getDate();
+            }
+        }
+
+        return $moved;
+    }
+
+    /**
+     * Changes the amount of one occurrence; the usual amount clears the change.
      */
     public function overrideAmount(\DateTimeImmutable $scheduledDate, int $amountPence): void
+    {
+        $oneOff = $amountPence === $this->amountPence ? null : $amountPence;
+        $this->changeOccurrence($scheduledDate, static fn (RecurringOccurrenceOverride $o) => $o->setAmountPence($oneOff));
+    }
+
+    /**
+     * Moves one occurrence to another date; null puts it back on its usual date.
+     */
+    public function moveOccurrence(\DateTimeImmutable $scheduledDate, ?\DateTimeImmutable $date): void
+    {
+        $this->changeOccurrence($scheduledDate, static fn (RecurringOccurrenceOverride $o) => $o->setDate($date));
+    }
+
+    /**
+     * @param \Closure(RecurringOccurrenceOverride): void $change
+     */
+    private function changeOccurrence(\DateTimeImmutable $scheduledDate, \Closure $change): void
     {
         if (!$this->getRule()->isScheduledOn($scheduledDate)) {
             throw new \InvalidArgumentException(\sprintf('"%s" is not scheduled on %s.', $this->description, $scheduledDate->format('Y-m-d')));
         }
 
-        $override = $this->findOverride($scheduledDate);
-        if ($amountPence === $this->amountPence) {
-            if (null !== $override) {
-                $this->amountOverrides->removeElement($override);
-            }
+        $override = $this->findOverride($scheduledDate) ?? new RecurringOccurrenceOverride($this, $scheduledDate);
+        $change($override);
 
-            return;
-        }
-
-        if (null !== $override) {
-            $override->setAmountPence($amountPence);
-        } else {
-            $this->amountOverrides->add(new RecurringAmountOverride($this, $scheduledDate, $amountPence));
+        if ($override->isEmpty()) {
+            $this->occurrenceOverrides->removeElement($override);
+        } elseif (!$this->occurrenceOverrides->contains($override)) {
+            $this->occurrenceOverrides->add($override);
         }
     }
 
-    private function findOverride(\DateTimeImmutable $scheduledDate): ?RecurringAmountOverride
+    private function findOverride(\DateTimeImmutable $scheduledDate): ?RecurringOccurrenceOverride
     {
         $key = $scheduledDate->format('Y-m-d');
 
-        return $this->amountOverrides->findFirst(
-            static fn (int $i, RecurringAmountOverride $o) => $o->getScheduledDate()->format('Y-m-d') === $key,
+        return $this->occurrenceOverrides->findFirst(
+            static fn (int $i, RecurringOccurrenceOverride $o) => $o->getScheduledDate()->format('Y-m-d') === $key,
         );
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Tests\Controller;
 
-use App\Entity\RecurringAmountOverride;
+use App\Entity\RecurringOccurrenceOverride;
 use App\Entity\RecurringTransaction;
 use App\Forecast\Recurrence\Frequency;
 use PHPUnit\Framework\Attributes\Test;
@@ -156,6 +156,6 @@ final class RecurringControllerTest extends BrowserTestCase
 
         self::assertResponseRedirects('/recurring');
         self::assertCount(0, $this->all(RecurringTransaction::class));
-        self::assertCount(0, $this->all(RecurringAmountOverride::class));
+        self::assertCount(0, $this->all(RecurringOccurrenceOverride::class));
     }
 }

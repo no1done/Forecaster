@@ -56,17 +56,52 @@ final class OccurrenceControllerTest extends BrowserTestCase
     }
 
     #[Test]
-    public function itCanBeResetToTheUsualAmount(): void
+    public function itMovesOneOccurrenceToAnotherDate(): void
     {
-        $this->reloadRent()->overrideAmount(self::date('2026-11-01'), -95000);
+        $this->client->request('GET', $this->occurrenceUrl('2026-11-01'));
+        self::assertInputValueSame('occurrence[date]', '2026-10-30');
+
+        $this->client->submitForm('Save', ['occurrence[date]' => '2026-11-03']);
+
+        self::assertResponseRedirects('/#day-2026-11-03');
+        self::assertEquals(self::date('2026-11-03'), $this->reloadRent()->getMovedDateFor(self::date('2026-11-01')));
+
+        $crawler = $this->client->request('GET', '/');
+        self::assertStringNotContainsString('Rent', $crawler->filter('tr[data-date="2026-10-30"]')->text());
+        $moved = $crawler->filter('tr[data-date="2026-11-03"]');
+        self::assertStringContainsString('Rent', $moved->text());
+        self::assertStringContainsString('moved from 30 Oct', $moved->text());
+        self::assertSame($this->occurrenceUrl('2026-11-01'), $moved->selectLink('Rent')->attr('href'));
+
+        $this->client->request('GET', $this->occurrenceUrl('2026-11-01'));
+        self::assertSelectorTextContains('.lead', 'Moved to Tue 3 Nov 2026 this time');
+        self::assertInputValueSame('occurrence[date]', '2026-11-03');
+    }
+
+    #[Test]
+    public function itRejectsABlankDate(): void
+    {
+        $this->client->request('GET', $this->occurrenceUrl('2026-11-01'));
+        $this->client->submitForm('Save', ['occurrence[date]' => '']);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('main form', 'Enter the date.');
+    }
+
+    #[Test]
+    public function itCanBeResetToTheUsualAmountAndDate(): void
+    {
+        $rent = $this->reloadRent();
+        $rent->overrideAmount(self::date('2026-11-01'), -95000);
+        $rent->moveOccurrence(self::date('2026-11-01'), self::date('2026-11-03'));
         $this->em()->flush();
 
         $this->client->request('GET', $this->occurrenceUrl('2026-11-01'));
         self::assertInputValueSame('occurrence[amountPence]', '950.00');
-        $this->client->submitForm('Use usual amount');
+        $this->client->submitForm('Use usual amount and date');
 
         self::assertResponseRedirects('/#day-2026-10-30');
-        self::assertCount(0, $this->reloadRent()->getAmountOverrides());
+        self::assertCount(0, $this->reloadRent()->getOccurrenceOverrides());
     }
 
     #[Test]

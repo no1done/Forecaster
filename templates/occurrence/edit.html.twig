@@ -6,7 +6,8 @@
     <h1>{{ recurring.description }}</h1>
     <p class="lead">
         Due {{ scheduledDate|date('D j M Y') }}
-        {%- if paidOn != scheduledDate %}, paid {{ paidOn|date('D j M') }} because of the weekend or a bank holiday{% endif %}.
+        {%- if usualDate != scheduledDate %}, paid {{ usualDate|date('D j M') }} because of the weekend or a bank holiday{% endif %}.
+        {%- if paidOn != usualDate %} Moved to <strong>{{ paidOn|date('D j M Y') }}</strong> this time.{% endif %}
         Usually <strong>{{ recurring.amountPence|pence }}</strong>.
     </p>
 

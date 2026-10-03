@@ -103,6 +103,40 @@ final class ForecasterTest extends KernelTestCase
     }
 
     #[Test]
+    public function aOneOffDateMovesJustThatOccurrence(): void
+    {
+        $rent = new RecurringTransaction('Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
+        $rent->moveOccurrence(self::date('2026-12-01'), self::date('2026-12-04'));
+        $this->persist(new BalanceCheckpoint(self::date('2026-10-01'), 300000), $rent);
+
+        $byDate = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2027-01-31')));
+
+        self::assertSame([], $byDate['2026-12-01']->movements);
+        self::assertSame(210000, $byDate['2026-12-03']->balancePence);
+        $moved = $byDate['2026-12-04']->movements[0];
+        self::assertSame(-90000, $moved->amountPence);
+        self::assertEquals(self::date('2026-12-01'), $moved->scheduledDate);
+        self::assertEquals(self::date('2026-12-01'), $moved->usualDate);
+        self::assertSame(120000, $byDate['2026-12-04']->balancePence);
+        self::assertFalse($byDate['2026-12-31']->movements[0]->isOneOffDate(), 'January rent, early for New Year');
+    }
+
+    #[Test]
+    public function aOneOffDateCanMoveAnOccurrenceIntoOrOutOfTheRange(): void
+    {
+        $rent = new RecurringTransaction('Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
+        $rent->moveOccurrence(self::date('2026-11-01'), self::date('2026-12-02'));
+        $rent->moveOccurrence(self::date('2026-12-01'), self::date('2026-11-27'));
+        $this->persist(new BalanceCheckpoint(self::date('2026-10-01'), 300000), $rent);
+
+        $byDate = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-11-30')));
+
+        self::assertSame([], $byDate['2026-10-30']->movements, 'November rent moved out to 2 Dec');
+        self::assertEquals(self::date('2026-12-01'), $byDate['2026-11-27']->movements[0]->scheduledDate, 'December rent moved in');
+        self::assertSame(210000, $byDate['2026-11-30']->balancePence);
+    }
+
+    #[Test]
     public function hiddenTransactionsStillCountTowardsTheBalance(): void
     {
         $savings = new RecurringTransaction('Savings', -20000, Frequency::Monthly, self::date('2026-10-05'));

@@ -41,7 +41,7 @@ final class RecurringTransactionTest extends TestCase
         $electricity->overrideAmount(self::date('2026-11-01'), -11000);
 
         self::assertSame(-11000, $electricity->getAmountPenceFor(self::date('2026-11-01')));
-        self::assertCount(1, $electricity->getAmountOverrides());
+        self::assertCount(1, $electricity->getOccurrenceOverrides());
     }
 
     #[Test]
@@ -62,7 +62,7 @@ final class RecurringTransactionTest extends TestCase
 
         $electricity->overrideAmount(self::date('2026-11-01'), -9000);
 
-        self::assertCount(0, $electricity->getAmountOverrides());
+        self::assertCount(0, $electricity->getOccurrenceOverrides());
         self::assertSame(-9000, $electricity->getAmountPenceFor(self::date('2026-11-01')));
     }
 
@@ -84,6 +84,51 @@ final class RecurringTransactionTest extends TestCase
 
         self::assertSame(-12000, $electricity->getAmountPenceFor(self::date('2026-11-01')));
         self::assertSame(-9500, $electricity->getAmountPenceFor(self::date('2026-12-01')));
+    }
+
+    #[Test]
+    public function aOneOffDateMovesThatOccurrenceOnly(): void
+    {
+        $electricity = self::electricity();
+
+        $electricity->moveOccurrence(self::date('2026-12-01'), self::date('2026-12-04'));
+
+        self::assertEquals(self::date('2026-12-04'), $electricity->getMovedDateFor(self::date('2026-12-01')));
+        self::assertNull($electricity->getMovedDateFor(self::date('2027-01-01')));
+        self::assertEquals(['2026-12-01' => self::date('2026-12-04')], $electricity->getMovedDates());
+    }
+
+    #[Test]
+    public function movingItBackRemovesTheOneOff(): void
+    {
+        $electricity = self::electricity();
+        $electricity->moveOccurrence(self::date('2026-12-01'), self::date('2026-12-04'));
+
+        $electricity->moveOccurrence(self::date('2026-12-01'), null);
+
+        self::assertCount(0, $electricity->getOccurrenceOverrides());
+    }
+
+    #[Test]
+    public function aOneOffDateAndAmountAreKeptSeparately(): void
+    {
+        $electricity = self::electricity();
+        $electricity->overrideAmount(self::date('2026-12-01'), -12000);
+        $electricity->moveOccurrence(self::date('2026-12-01'), self::date('2026-12-04'));
+
+        $electricity->overrideAmount(self::date('2026-12-01'), -9000);
+
+        self::assertCount(1, $electricity->getOccurrenceOverrides());
+        self::assertSame(-9000, $electricity->getAmountPenceFor(self::date('2026-12-01')));
+        self::assertEquals(self::date('2026-12-04'), $electricity->getMovedDateFor(self::date('2026-12-01')));
+    }
+
+    #[Test]
+    public function onlyScheduledOccurrencesCanBeMoved(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        self::electricity()->moveOccurrence(self::date('2026-12-02'), self::date('2026-12-04'));
     }
 
     private static function electricity(): RecurringTransaction

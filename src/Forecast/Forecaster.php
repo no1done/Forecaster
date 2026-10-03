@@ -4,6 +4,8 @@ namespace App\Forecast;
 
 use App\Entity\AdHocTransaction;
 use App\Entity\BalanceCheckpoint;
+use App\Entity\RecurringTransaction;
+use App\Forecast\Calendar\WorkingDayCalendar;
 use App\Forecast\Recurrence\OccurrenceGenerator;
 use App\Repository\AdHocTransactionRepository;
 use App\Repository\BalanceCheckpointRepository;
@@ -20,6 +22,7 @@ final class Forecaster
         private readonly AdHocTransactionRepository $adHocTransactions,
         private readonly OccurrenceGenerator $occurrences,
         private readonly ForecastCalculator $calculator,
+        private readonly WorkingDayCalendar $calendar,
     ) {
     }
 
@@ -37,16 +40,18 @@ final class Forecaster
             $this->adHocTransactions->findBetween($after, $to),
         );
         foreach ($this->recurringTransactions->findNotEndedBefore($after) as $recurring) {
+            $moved = $recurring->getMovedDates();
             foreach ($this->occurrences->between($recurring->getRule(), $after, $to) as $occurrence) {
-                $movements[] = new Movement(
-                    $occurrence->date,
-                    $recurring->getAmountPenceFor($occurrence->scheduledDate),
-                    $recurring->getDescription(),
-                    recurringTransactionId: $recurring->getId(),
-                    scheduledDate: $occurrence->scheduledDate,
-                    usualAmountPence: $recurring->getAmountPence(),
-                    hidden: $recurring->isHiddenFromForecast(),
-                );
+                if (!isset($moved[$occurrence->scheduledDate->format('Y-m-d')])) {
+                    $movements[] = $this->movement($recurring, $occurrence->scheduledDate, $occurrence->date);
+                }
+            }
+            // A one-off date can move an occurrence into or out of the range.
+            foreach ($moved as $scheduled => $date) {
+                $scheduledDate = new \DateTimeImmutable($scheduled);
+                if ($date >= $after && $date <= $to && $recurring->getRule()->isScheduledOn($scheduledDate)) {
+                    $movements[] = $this->movement($recurring, $scheduledDate, $date, usualDate: $this->calendar->onOrBefore($scheduledDate));
+                }
             }
         }
 
@@ -55,6 +60,20 @@ final class Forecaster
             $movements,
             $from,
             $to,
+        );
+    }
+
+    private function movement(RecurringTransaction $recurring, \DateTimeImmutable $scheduledDate, \DateTimeImmutable $date, ?\DateTimeImmutable $usualDate = null): Movement
+    {
+        return new Movement(
+            $date,
+            $recurring->getAmountPenceFor($scheduledDate),
+            $recurring->getDescription(),
+            recurringTransactionId: $recurring->getId(),
+            scheduledDate: $scheduledDate,
+            usualAmountPence: $recurring->getAmountPence(),
+            hidden: $recurring->isHiddenFromForecast(),
+            usualDate: $usualDate,
         );
     }
 }

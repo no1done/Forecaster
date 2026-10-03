@@ -57,6 +57,7 @@
                                             <span class="description">
                                                 {% if movement.recurringTransactionId %}
                                                     <a href="{{ path('recurring_occurrence', {id: movement.recurringTransactionId, scheduledDate: movement.scheduledDate|date('Y-m-d')}) }}">{{ movement.description }}</a>
+                                                    {%- if movement.isOneOffDate %} <span class="tag" title="Usually {{ movement.usualDate|date('D j M') }}">moved from {{ movement.usualDate|date('j M') }}</span>{% endif %}
                                                 {% else %}
                                                     <a href="{{ path('ad_hoc_edit', {id: movement.adHocTransactionId}) }}">{{ movement.description }}</a> <span class="tag">ad-hoc</span>
                                                 {% endif %}

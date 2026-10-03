@@ -25,7 +25,7 @@ class RecurringTransactionRepository extends ServiceEntityRepository
     public function findNotEndedBefore(\DateTimeImmutable $from): array
     {
         return $this->createQueryBuilder('r')
-            ->leftJoin('r.amountOverrides', 'o')
+            ->leftJoin('r.occurrenceOverrides', 'o')
             ->addSelect('o')
             ->where('r.endDate IS NULL OR r.endDate >= :from')
             ->setParameter('from', $from)

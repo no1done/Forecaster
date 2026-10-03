@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\RecurringTransaction;
 use App\Forecast\Calendar\WorkingDayCalendar;
-use App\Form\OccurrenceAmountType;
+use App\Form\OccurrenceType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\SubmitButton;
@@ -31,8 +31,10 @@ final class OccurrenceController extends AbstractController
         }
 
         $usual = $recurring->getAmountPence();
-        $form = $this->createForm(OccurrenceAmountType::class, [
+        $usualDate = $calendar->onOrBefore($scheduledDate);
+        $form = $this->createForm(OccurrenceType::class, [
             'amountPence' => abs($recurring->getAmountPenceFor($scheduledDate)),
+            'date' => $recurring->getMovedDateFor($scheduledDate) ?? $usualDate,
         ]);
         $form->handleRequest($request);
 
@@ -40,17 +42,20 @@ final class OccurrenceController extends AbstractController
         \assert($reset instanceof SubmitButton);
         if ($form->isSubmitted() && ($reset->isClicked() || $form->isValid())) {
             $magnitude = $reset->isClicked() ? abs($usual) : $form->get('amountPence')->getData();
+            $date = $reset->isClicked() ? $usualDate : $form->get('date')->getData();
             $recurring->overrideAmount($scheduledDate, $usual < 0 ? -$magnitude : $magnitude);
+            $recurring->moveOccurrence($scheduledDate, $date == $usualDate ? null : $date);
             $em->flush();
 
-            return $this->redirectToRoute('forecast', ['_fragment' => 'day-'.$calendar->onOrBefore($scheduledDate)->format('Y-m-d')]);
+            return $this->redirectToRoute('forecast', ['_fragment' => 'day-'.$date->format('Y-m-d')]);
         }
 
         return $this->render('occurrence/edit.html.twig', [
             'form' => $form,
             'recurring' => $recurring,
             'scheduledDate' => $scheduledDate,
-            'paidOn' => $calendar->onOrBefore($scheduledDate),
+            'paidOn' => $recurring->getMovedDateFor($scheduledDate) ?? $usualDate,
+            'usualDate' => $usualDate,
         ]);
     }
 }
