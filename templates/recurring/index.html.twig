@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Recurring{% endblock %}
+
+{% block body %}
+    <div class="page-header">
+        <h1>Recurring transactions</h1>
+        <a class="button" href="{{ path('recurring_new') }}">Add</a>
+    </div>
+
+    {% if recurring is empty %}
+        <p class="muted">Add your salary, bills and subscriptions to see them in the forecast.</p>
+    {% else %}
+        <table class="list">
+            <thead>
+                <tr>
+                    <th scope="col">Description</th>
+                    <th scope="col">Schedule</th>
+                    <th scope="col" class="amount">Amount</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in recurring %}
+                    <tr>
+                        <td><a href="{{ path('recurring_edit', {id: item.id}) }}">{{ item.description }}</a></td>
+                        <td>
+                            {% if item.interval > 1 %}Every {{ item.interval }} {{ item.frequency.unit }}{% if item.frequency.value == 'last_working_day_of_month' %}, last working day{% endif %}{% else %}{{ item.frequency.label }}{% endif %}
+                            <span class="muted">
+                                from {{ item.startDate|date('j M Y') }}
+                                {%- if item.endDate %} until {{ item.endDate|date('j M Y') }}{% endif %}
+                            </span>
+                        </td>
+                        <td class="amount {{ item.amountPence < 0 ? 'out' : 'in' }}">{{ item.amountPence|pence }}</td>
+                        <td class="actions">
+                            {{ include('_delete_button.html.twig', {action: path('recurring_delete', {id: item.id}), confirm: 'Delete ' ~ item.description ~ ' and any one-off changes to it?'}) }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

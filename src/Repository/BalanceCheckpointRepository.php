@@ -40,4 +40,17 @@ class BalanceCheckpointRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findOneOnDate(\DateTimeImmutable $date): ?BalanceCheckpoint
+    {
+        return $this->findOneBy(['date' => $date]);
+    }
+
+    /**
+     * @return list<BalanceCheckpoint>
+     */
+    public function findNewestFirst(): array
+    {
+        return $this->findBy([], ['date' => 'DESC']);
+    }
 }

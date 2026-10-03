@@ -6,14 +6,12 @@ use App\Forecast\Checkpoint;
 use App\Repository\BalanceCheckpointRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * The real account balance at the end of a day. The earliest one is the
  * starting balance.
  */
 #[ORM\Entity(repositoryClass: BalanceCheckpointRepository::class)]
-#[UniqueEntity('date', message: 'There is already a checkpoint on this date.')]
 class BalanceCheckpoint
 {
     #[ORM\Id]

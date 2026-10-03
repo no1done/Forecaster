@@ -6,7 +6,6 @@ use App\Forecast\Movement;
 use App\Repository\AdHocTransactionRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * A one-off purchase or payment in.
@@ -22,13 +21,10 @@ class AdHocTransaction
 
     public function __construct(
         #[ORM\Column(length: 255)]
-        #[Assert\NotBlank]
-        #[Assert\Length(max: 255)]
         private string $description,
 
         /** Positive for money in, negative for money out. */
         #[ORM\Column]
-        #[Assert\NotEqualTo(0)]
         private int $amountPence,
 
         #[ORM\Column(type: Types::DATE_IMMUTABLE)]
@@ -73,6 +69,6 @@ class AdHocTransaction
 
     public function toMovement(): Movement
     {
-        return new Movement($this->date, $this->amountPence, $this->description);
+        return new Movement($this->date, $this->amountPence, $this->description, adHocTransactionId: $this->id);
     }
 }

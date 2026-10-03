@@ -9,7 +9,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: RecurringTransactionRepository::class)]
 class RecurringTransaction
@@ -25,13 +24,10 @@ class RecurringTransaction
 
     public function __construct(
         #[ORM\Column(length: 255)]
-        #[Assert\NotBlank]
-        #[Assert\Length(max: 255)]
         private string $description,
 
         /** Positive for money in, negative for money out. */
         #[ORM\Column]
-        #[Assert\NotEqualTo(0)]
         private int $amountPence,
 
         #[ORM\Column(length: 32, enumType: Frequency::class)]
@@ -42,11 +38,9 @@ class RecurringTransaction
 
         /** Every N weeks/months/years. */
         #[ORM\Column(name: 'repeat_interval')]
-        #[Assert\Positive]
         private int $interval = 1,
 
         #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
-        #[Assert\GreaterThanOrEqual(propertyPath: 'startDate')]
         private ?\DateTimeImmutable $endDate = null,
     ) {
         $this->amountOverrides = new ArrayCollection();

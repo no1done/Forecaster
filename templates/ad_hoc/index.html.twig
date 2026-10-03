@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ad-hoc{% endblock %}
+
+{% macro rows(transactions) %}
+    <table class="list">
+        <thead>
+            <tr>
+                <th scope="col">Date</th>
+                <th scope="col">Description</th>
+                <th scope="col" class="amount">Amount</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in transactions %}
+                <tr>
+                    <td class="nowrap">{{ transaction.date|date('D j M Y') }}</td>
+                    <td><a href="{{ path('ad_hoc_edit', {id: transaction.id}) }}">{{ transaction.description }}</a></td>
+                    <td class="amount {{ transaction.amountPence < 0 ? 'out' : 'in' }}">{{ transaction.amountPence|pence }}</td>
+                    <td class="actions">
+                        {{ include('_delete_button.html.twig', {action: path('ad_hoc_delete', {id: transaction.id}), confirm: 'Delete ' ~ transaction.description ~ '?'}) }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endmacro %}
+
+{% block body %}
+    <div class="page-header">
+        <h1>Ad-hoc transactions</h1>
+        <a class="button" href="{{ path('ad_hoc_new') }}">Add</a>
+    </div>
+
+    <section id="upcoming">
+        <h2>Upcoming</h2>
+        {% if upcoming is empty %}
+            <p class="muted">Nothing planned. Use “+” on any day of the forecast to try out a purchase.</p>
+        {% else %}
+            {{ _self.rows(upcoming) }}
+        {% endif %}
+    </section>
+
+    {% if past is not empty %}
+        <section id="past">
+            <h2>Recent</h2>
+            {{ _self.rows(past) }}
+        </section>
+    {% endif %}
+{% endblock %}

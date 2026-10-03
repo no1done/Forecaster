@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Balances{% endblock %}
+
+{% block body %}
+    <h1>Balances</h1>
+    <p class="lead">Record your real bank balance now and then. The forecast starts from the most recent one.</p>
+
+    <section class="panel">
+        {{ form(form) }}
+    </section>
+
+    {% if checkpoints is not empty %}
+        <table class="list">
+            <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col" class="amount">Balance</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for checkpoint in checkpoints %}
+                    <tr>
+                        <td>{{ checkpoint.date|date('D j M Y') }}{% if loop.last %} <span class="tag">Starting balance</span>{% endif %}</td>
+                        <td class="amount">{{ checkpoint.balancePence|pence }}</td>
+                        <td class="actions">
+                            {{ include('_delete_button.html.twig', {action: path('balance_delete', {id: checkpoint.id}), confirm: 'Delete this balance?'}) }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

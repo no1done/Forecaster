@@ -33,4 +33,12 @@ class RecurringTransactionRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * @return list<RecurringTransaction>
+     */
+    public function findAllByDescription(): array
+    {
+        return $this->findBy([], ['description' => 'ASC']);
+    }
 }

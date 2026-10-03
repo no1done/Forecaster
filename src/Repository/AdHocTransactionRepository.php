@@ -30,4 +30,33 @@ class AdHocTransactionRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * @return list<AdHocTransaction>
+     */
+    public function findOnOrAfter(\DateTimeImmutable $date): array
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.date >= :date')
+            ->setParameter('date', $date)
+            ->orderBy('t.date')
+            ->addOrderBy('t.id')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return list<AdHocTransaction> newest first
+     */
+    public function findRecentBefore(\DateTimeImmutable $date, int $limit): array
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.date < :date')
+            ->setParameter('date', $date)
+            ->orderBy('t.date', 'DESC')
+            ->addOrderBy('t.id', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }

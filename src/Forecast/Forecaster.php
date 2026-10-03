@@ -38,7 +38,14 @@ final class Forecaster
         );
         foreach ($this->recurringTransactions->findNotEndedBefore($after) as $recurring) {
             foreach ($this->occurrences->between($recurring->getRule(), $after, $to) as $occurrence) {
-                $movements[] = new Movement($occurrence->date, $recurring->getAmountPenceFor($occurrence->scheduledDate), $recurring->getDescription());
+                $movements[] = new Movement(
+                    $occurrence->date,
+                    $recurring->getAmountPenceFor($occurrence->scheduledDate),
+                    $recurring->getDescription(),
+                    recurringTransactionId: $recurring->getId(),
+                    scheduledDate: $occurrence->scheduledDate,
+                    usualAmountPence: $recurring->getAmountPence(),
+                );
             }
         }
 

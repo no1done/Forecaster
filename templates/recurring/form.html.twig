@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block body %}
+    <h1>{{ title }}</h1>
+
+    <section class="panel">
+        {{ form(form) }}
+    </section>
+
+    <p><a href="{{ path('recurring_index') }}">Back to recurring transactions</a></p>
+{% endblock %}

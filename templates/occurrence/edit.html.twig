@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ recurring.description }} on {{ scheduledDate|date('j M Y') }}{% endblock %}
+
+{% block body %}
+    <h1>{{ recurring.description }}</h1>
+    <p class="lead">
+        Due {{ scheduledDate|date('D j M Y') }}
+        {%- if paidOn != scheduledDate %}, paid {{ paidOn|date('D j M') }} because of the weekend or a bank holiday{% endif %}.
+        Usually <strong>{{ recurring.amountPence|pence }}</strong>.
+    </p>
+
+    <section class="panel">
+        {{ form(form) }}
+    </section>
+
+    <p>
+        <a href="{{ path('forecast', {_fragment: 'day-' ~ paidOn|date('Y-m-d')}) }}">Back to forecast</a>
+        · <a href="{{ path('recurring_edit', {id: recurring.id}) }}">Change every {{ recurring.description }} payment</a>
+    </p>
+{% endblock %}
