@@ -8,10 +8,10 @@ namespace App\Forecast;
  */
 final class BalanceColour
 {
-    public const string RED = '#f8696b';
-    public const string AMBER = '#ffc000';
-    public const string LIGHT_GREEN = '#c6efce';
-    public const string DARK_GREEN = '#63be7b';
+    public const string RED = '#d9826b'; // terracotta
+    public const string AMBER = '#d9a441'; // ochre
+    public const string LIGHT_GREEN = '#c9d6a3'; // sage
+    public const string DARK_GREEN = '#86a35f'; // moss
 
     public function __construct(
         private readonly int $comfortablePence = 25000,

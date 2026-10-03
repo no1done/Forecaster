@@ -1,121 +1,98 @@
+/*
+ * Earthy, hearth-lit ledger: parchment pages, forest-green leather,
+ * gilt lettering and ink-brown text.
+ */
+
 :root {
-    --text: #1f2328;
-    --muted: #656d76;
-    --border: #d0d7de;
-    --surface: #ffffff;
-    --background: #f6f8fa;
-    --money-in: #1a7f37;
-    --money-out: #b42318;
+    --ink: #2b2116;
+    --ink-soft: #6b5843;
+    --parchment: #f1e7d0;
+    --parchment-light: #faf4e6;
+    --parchment-deep: #e6d6b3;
+    --rule: #d3bf96;
+    --leather: #7a4b23;
+    --leather-dark: #5a3518;
+    --forest: #2f3b29;
+    --forest-light: #4a5d3a;
+    --gilt: #d4b06a;
+    --gilt-bright: #e8c987;
+    --money-in: #4f6b2f;
+    --money-out: #9b3d23;
+
+    --font-body: 'Alegreya', 'Iowan Old Style', Georgia, serif;
+    --font-display: 'Cinzel', 'Trajan Pro', Georgia, serif;
+    --radius: 4px;
+    --shadow: 0 1px 2px rgba(60, 40, 15, 0.12), 0 4px 14px rgba(60, 40, 15, 0.08);
 }
+
+/* Page */
 
 body {
     margin: 0;
-    background: var(--background);
-    color: var(--text);
-    font: 15px/1.4 system-ui, sans-serif;
+    color: var(--ink);
+    font: 17px/1.45 var(--font-body);
+    font-variant-numeric: lining-nums;
+    background-color: var(--parchment);
+    /* Faint mottling, like old paper by firelight. */
+    background-image:
+        radial-gradient(ellipse at 15% 10%, rgba(255, 248, 228, 0.7), transparent 55%),
+        radial-gradient(ellipse at 85% 90%, rgba(196, 168, 118, 0.18), transparent 60%);
+    background-attachment: fixed;
 }
 
 main {
-    max-width: 52rem;
+    max-width: 54rem;
     margin: 0 auto;
-    padding: 1.5rem 1rem;
-}
-
-.forecast {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--surface);
-}
-
-.forecast th,
-.forecast td {
-    padding: 0.35rem 0.6rem;
-    border-bottom: 1px solid var(--border);
-    text-align: left;
-    vertical-align: top;
-}
-
-.forecast thead th {
-    position: sticky;
-    top: 0;
-    background: var(--surface);
-}
-
-.forecast .month th {
-    padding-top: 1rem;
-    background: var(--background);
-    font-size: 1.05rem;
-}
-
-.forecast .date {
-    white-space: nowrap;
-}
-
-.forecast .weekend .date {
-    color: var(--muted);
-}
-
-.forecast .today .date {
-    font-weight: 700;
-}
-
-.forecast .amount {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
-
-.forecast .balance {
-    width: 8rem;
-    font-weight: 600;
-}
-
-.movements {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.movements li {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.movements .in {
-    color: var(--money-in);
-}
-
-.movements .out {
-    color: var(--money-out);
-}
-
-.checkpoint {
-    font-size: 0.8rem;
-    color: var(--muted);
+    padding: 1.75rem 1rem 3rem;
 }
 
 a {
-    color: #0969da;
+    color: var(--leather);
+    text-decoration-color: rgba(122, 75, 35, 0.4);
+    text-underline-offset: 0.15em;
+}
+
+a:hover {
+    color: var(--leather-dark);
+    text-decoration-color: currentColor;
+}
+
+:focus-visible {
+    outline: 2px solid var(--gilt);
+    outline-offset: 2px;
+}
+
+h1,
+h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--forest);
+    letter-spacing: 0.03em;
 }
 
 h1 {
     margin: 0 0 0.75rem;
-    font-size: 1.6rem;
+    font-size: 1.75rem;
 }
 
 h2 {
-    margin: 1.5rem 0 0.5rem;
+    margin: 1.75rem 0 0.6rem;
     font-size: 1.15rem;
+}
+
+h2::before {
+    content: '❧ ';
+    color: var(--gilt);
 }
 
 .lead {
     margin-top: 0;
-    color: var(--muted);
+    color: var(--ink-soft);
+    font-style: italic;
 }
 
 .muted {
-    color: var(--muted);
+    color: var(--ink-soft);
 }
 
 .nowrap {
@@ -136,22 +113,52 @@ h2 {
 .site-nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
-    padding: 0.75rem 1rem;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+    align-items: center;
+    gap: 0.25rem 1.5rem;
+    padding: 0.8rem 1.25rem;
+    background: var(--forest);
+    background-image: linear-gradient(180deg, #384632, var(--forest));
+    border-bottom: 3px double var(--gilt);
+    box-shadow: 0 2px 8px rgba(30, 25, 10, 0.25);
+}
+
+.site-nav .brand {
+    color: var(--gilt);
+    font-size: 1.4rem;
+    line-height: 1;
 }
 
 .site-nav a {
-    color: var(--text);
-    text-decoration: none;
+    color: var(--parchment);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
     font-weight: 500;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+}
+
+.site-nav a:hover {
+    color: var(--gilt-bright);
 }
 
 .site-nav a[aria-current="page"] {
-    color: #0969da;
+    color: var(--gilt);
     text-decoration: underline;
-    text-underline-offset: 0.3em;
+    text-decoration-color: var(--gilt);
+    text-underline-offset: 0.4em;
+}
+
+.site-nav .logout {
+    margin-left: auto;
+}
+
+.site-nav .logout .link-button {
+    color: var(--parchment-deep);
+    font-size: 0.95rem;
+}
+
+.site-nav .logout .link-button:hover {
+    color: var(--gilt-bright);
 }
 
 .page-header {
@@ -166,30 +173,50 @@ h2 {
 .button,
 button {
     display: inline-block;
-    padding: 0.4rem 0.9rem;
-    border: 1px solid #1f6feb;
-    border-radius: 6px;
-    background: #1f6feb;
-    color: #fff;
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--forest);
+    border-radius: var(--radius);
+    background: var(--forest-light);
+    background-image: linear-gradient(180deg, #566b44, var(--forest-light));
+    color: var(--parchment-light);
     font: inherit;
     font-weight: 500;
     text-decoration: none;
+    white-space: nowrap;
     cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.button:hover,
+button:hover {
+    background: var(--forest);
+    color: var(--gilt-bright);
 }
 
 button[name$="[reset]"] {
-    background: var(--surface);
-    color: var(--text);
-    border-color: var(--border);
+    background: var(--parchment-light);
+    color: var(--leather);
+    border-color: var(--rule);
+}
+
+button[name$="[reset]"]:hover {
+    background: var(--parchment-deep);
+    color: var(--leather-dark);
 }
 
 .link-button {
     padding: 0;
     border: 0;
     background: none;
-    color: #0969da;
+    box-shadow: none;
+    color: var(--leather);
     font-weight: 400;
     text-decoration: underline;
+}
+
+.link-button:hover {
+    background: none;
+    color: var(--leather-dark);
 }
 
 .link-button.danger {
@@ -200,14 +227,15 @@ button[name$="[reset]"] {
 
 .panel {
     margin-bottom: 1.5rem;
-    padding: 1rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    padding: 1.25rem;
+    background: var(--parchment-light);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
 }
 
 .panel form > div > div {
-    margin-bottom: 0.9rem;
+    margin-bottom: 1rem;
 }
 
 .panel label {
@@ -216,27 +244,43 @@ button[name$="[reset]"] {
     font-weight: 500;
 }
 
-.panel input[type="radio"] + label {
+.panel input[type="radio"],
+.panel input[type="checkbox"] {
+    accent-color: var(--forest-light);
+}
+
+.panel input[type="radio"] + label,
+.panel input[type="checkbox"] + label {
     display: inline;
     margin: 0 1rem 0 0.25rem;
     font-weight: 400;
 }
 
-.panel input:not([type="radio"]),
+.panel input:not([type="radio"], [type="checkbox"]),
 .panel select {
     box-sizing: border-box;
     width: 100%;
     max-width: 22rem;
-    padding: 0.4rem 0.5rem;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    padding: 0.4rem 0.55rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: #fffdf7;
+    color: var(--ink);
     font: inherit;
+}
+
+.panel input:focus,
+.panel select:focus {
+    border-color: var(--gilt);
+    outline: 2px solid rgba(212, 176, 106, 0.5);
+    outline-offset: 0;
 }
 
 .panel .help-text {
     margin-top: 0.25rem;
-    color: var(--muted);
-    font-size: 0.85rem;
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    font-style: italic;
 }
 
 .panel ul {
@@ -244,38 +288,66 @@ button[name$="[reset]"] {
     padding: 0;
     list-style: none;
     color: var(--money-out);
+    font-weight: 500;
 }
 
 .panel button {
     margin-right: 0.5rem;
 }
 
-/* Lists */
+/* Lists and the forecast ledger share a look */
 
-.list {
+.list,
+.forecast {
     width: 100%;
     border-collapse: collapse;
-    background: var(--surface);
+    background: var(--parchment-light);
+    border: 1px solid var(--rule);
+    box-shadow: var(--shadow);
 }
 
 .list th,
-.list td {
-    padding: 0.45rem 0.6rem;
-    border-bottom: 1px solid var(--border);
+.list td,
+.forecast th,
+.forecast td {
+    padding: 0.45rem 0.7rem;
+    border-bottom: 1px solid var(--parchment-deep);
     text-align: left;
+    vertical-align: top;
 }
 
-.list .amount {
+.list thead th,
+.forecast thead th {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    background: var(--parchment-deep);
+    border-bottom: 1px solid var(--rule);
+}
+
+.forecast thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.list .amount,
+.forecast .amount {
     text-align: right;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: tabular-nums lining-nums;
     white-space: nowrap;
 }
 
-.list .in {
+.list .in,
+.movements .in {
     color: var(--money-in);
 }
 
-.list .out {
+.list .out,
+.movements .out {
     color: var(--money-out);
 }
 
@@ -286,19 +358,71 @@ button[name$="[reset]"] {
 
 .tag {
     display: inline-block;
-    padding: 0 0.4rem;
+    padding: 0 0.45rem;
+    border: 1px solid var(--rule);
     border-radius: 999px;
-    background: var(--background);
-    border: 1px solid var(--border);
-    color: var(--muted);
+    background: var(--parchment);
+    color: var(--ink-soft);
     font-size: 0.75rem;
+    font-style: italic;
+    vertical-align: 0.1em;
 }
 
-/* Forecast extras */
+.notice {
+    padding: 1rem 1.25rem;
+    background: var(--parchment-light);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--gilt);
+    border-radius: var(--radius);
+    font-style: italic;
+}
+
+/* Forecast */
+
+.forecast .month th {
+    padding: 1.1rem 0.7rem 0.4rem;
+    background: var(--parchment);
+    border-bottom: 2px solid var(--rule);
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--forest);
+}
+
+.forecast .month th::before {
+    content: '❦ ';
+    color: var(--gilt);
+}
+
+.forecast .date {
+    white-space: nowrap;
+}
+
+.forecast .weekend td {
+    background: rgba(230, 214, 179, 0.35);
+}
+
+.forecast .weekend .date {
+    color: var(--ink-soft);
+    font-style: italic;
+}
+
+.forecast .today .date {
+    font-weight: 700;
+    box-shadow: inset 4px 0 0 var(--gilt);
+}
+
+.forecast .balance {
+    width: 8rem;
+    font-weight: 700;
+    color: var(--ink);
+}
 
 .forecast .add {
     margin-left: 0.25rem;
-    color: var(--muted);
+    color: var(--leather);
+    font-weight: 700;
     text-decoration: none;
     opacity: 0;
 }
@@ -308,49 +432,101 @@ button[name$="[reset]"] {
     opacity: 1;
 }
 
-.movements a {
-    color: inherit;
-}
-
-.movements .usual {
-    color: var(--muted);
-    font-size: 0.8rem;
-}
-
 .forecast :target td {
-    outline: 2px solid #1f6feb;
+    outline: 2px solid var(--gilt);
     outline-offset: -2px;
 }
 
-@media (max-width: 40rem) {
-    .forecast .balance {
-        width: auto;
-    }
+.movements {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
 
-    .movements li {
-        flex-direction: column;
-        gap: 0;
-    }
+.movements li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.movements a {
+    color: inherit;
+    text-decoration-color: rgba(43, 33, 22, 0.25);
+}
+
+.movements .usual {
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    font-style: italic;
 }
 
 /* Login */
-
-.site-nav .logout {
-    margin-left: auto;
-}
 
 .login {
     max-width: 24rem;
 }
 
-.panel input[type="checkbox"] + label {
-    display: inline;
-    margin-left: 0.25rem;
-    font-weight: 400;
+.login form > div {
+    margin-bottom: 1rem;
 }
 
 .error {
     margin-top: 0;
     color: var(--money-out);
     font-weight: 500;
+}
+
+@media (max-width: 40rem) {
+    body {
+        font-size: 16px;
+    }
+
+    main {
+        padding-top: 1.25rem;
+    }
+
+    h1 {
+        font-size: 1.4rem;
+    }
+
+    .site-nav {
+        gap: 0.25rem 1rem;
+    }
+
+    .forecast {
+        font-size: 0.9rem;
+    }
+
+    .forecast th,
+    .forecast td {
+        padding: 0.4rem 0.4rem;
+    }
+
+    .forecast .date {
+        width: 4.5rem;
+    }
+
+    .forecast .balance {
+        width: auto;
+    }
+
+    .forecast thead th {
+        font-size: 0.7rem;
+        letter-spacing: 0.05em;
+    }
+
+    .movements li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+    }
+
+    .movements .amount {
+        align-self: flex-end;
+    }
+
+    .list th,
+    .list td {
+        padding: 0.4rem 0.45rem;
+    }
 }

@@ -36,11 +36,13 @@
                             <ul class="movements">
                                 {% for movement in day.movements %}
                                     <li>
-                                        {% if movement.recurringTransactionId %}
-                                            <a href="{{ path('recurring_occurrence', {id: movement.recurringTransactionId, scheduledDate: movement.scheduledDate|date('Y-m-d')}) }}">{{ movement.description }}</a>
-                                        {% else %}
-                                            <a href="{{ path('ad_hoc_edit', {id: movement.adHocTransactionId}) }}">{{ movement.description }}</a> <span class="tag">ad-hoc</span>
-                                        {% endif %}
+                                        <span class="description">
+                                            {% if movement.recurringTransactionId %}
+                                                <a href="{{ path('recurring_occurrence', {id: movement.recurringTransactionId, scheduledDate: movement.scheduledDate|date('Y-m-d')}) }}">{{ movement.description }}</a>
+                                            {% else %}
+                                                <a href="{{ path('ad_hoc_edit', {id: movement.adHocTransactionId}) }}">{{ movement.description }}</a> <span class="tag">ad-hoc</span>
+                                            {% endif %}
+                                        </span>
                                         <span class="amount {{ movement.amountPence < 0 ? 'out' : 'in' }}">
                                             {%- if movement.isOneOffAmount %}<span class="usual">usually {{ movement.usualAmountPence|pence }}</span> {% endif -%}
                                             {{ movement.amountPence|pence }}
