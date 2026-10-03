@@ -16,6 +16,11 @@ class BalanceCheckpointRepository extends ServiceEntityRepository
         parent::__construct($registry, BalanceCheckpoint::class);
     }
 
+    public function findEarliest(): ?BalanceCheckpoint
+    {
+        return $this->findOneBy([], ['date' => 'ASC']);
+    }
+
     public function findLatestOnOrBefore(\DateTimeImmutable $date): ?BalanceCheckpoint
     {
         return $this->createQueryBuilder('c')

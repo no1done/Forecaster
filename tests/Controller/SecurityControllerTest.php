@@ -64,7 +64,7 @@ final class SecurityControllerTest extends WebTestCase
         self::assertResponseRedirects('/');
         $this->client->followRedirect();
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('h1', 'Next 12 months');
+        self::assertSelectorTextContains('h1', 'Forecast');
     }
 
     #[Test]

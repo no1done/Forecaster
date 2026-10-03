@@ -23,4 +23,18 @@ final readonly class ForecastDay
     {
         return array_values(array_filter($this->movements, static fn (Movement $m) => !$m->hidden));
     }
+
+    /**
+     * Whether any listed movement's description contains $search, ignoring case.
+     */
+    public function matches(string $search): bool
+    {
+        foreach ($this->visibleMovements() as $movement) {
+            if (false !== mb_stripos($movement->description, $search)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

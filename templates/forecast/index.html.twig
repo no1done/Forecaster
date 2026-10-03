@@ -4,58 +4,77 @@
 
 {% block body %}
     <div class="page-header">
-        <h1>Next 12 months</h1>
+        <h1>Forecast</h1>
         <a class="button" href="{{ path('ad_hoc_new') }}">Add ad-hoc</a>
     </div>
 
     {% if days is null %}
         <p class="notice"><a href="{{ path('balance_index') }}">Record your starting balance</a> to see your forecast.</p>
     {% else %}
-        <table class="forecast">
-            <thead>
-                <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Transactions</th>
-                    <th scope="col" class="amount">Balance</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for day in days %}
-                    {% if loop.first or day.date|date('j') == 1 %}
-                        <tr class="month">
-                            <th colspan="3" scope="rowgroup">{{ day.date|date('F Y') }}</th>
-                        </tr>
-                    {% endif %}
-                    {% set ymd = day.date|date('Y-m-d') %}
-                    <tr id="day-{{ ymd }}" data-date="{{ ymd }}" class="{{ day.date|date('N') >= 6 ? 'weekend' }} {{ day.date == today ? 'today' }}">
-                        <td class="date">
-                            {{ day.date|date('D j M') }}
-                            <a class="add" href="{{ path('ad_hoc_new', {date: ymd}) }}" title="Add an ad-hoc transaction on {{ day.date|date('j M') }}" aria-label="Add an ad-hoc transaction on {{ day.date|date('j M') }}">+</a>
-                        </td>
-                        <td>
-                            <ul class="movements">
-                                {% for movement in day.visibleMovements %}
-                                    <li>
-                                        <span class="description">
-                                            {% if movement.recurringTransactionId %}
-                                                <a href="{{ path('recurring_occurrence', {id: movement.recurringTransactionId, scheduledDate: movement.scheduledDate|date('Y-m-d')}) }}">{{ movement.description }}</a>
-                                            {% else %}
-                                                <a href="{{ path('ad_hoc_edit', {id: movement.adHocTransactionId}) }}">{{ movement.description }}</a> <span class="tag">ad-hoc</span>
-                                            {% endif %}
-                                        </span>
-                                        <span class="amount {{ movement.amountPence < 0 ? 'out' : 'in' }}">
-                                            {%- if movement.isOneOffAmount %}<span class="usual">usually {{ movement.usualAmountPence|pence }}</span> {% endif -%}
-                                            {{ movement.amountPence|pence }}
-                                        </span>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                            {% if day.isCheckpoint %}<span class="tag">Recorded balance</span>{% endif %}
-                        </td>
-                        <td class="amount balance" style="background: {{ balance_colour(day.balancePence) }}">{{ day.balancePence|pence }}</td>
+        {{ form_start(form, {attr: {class: 'panel filters', role: 'search'}}) }}
+            <div class="field">{{ form_row(form.from) }}</div>
+            <div class="field">{{ form_row(form.to) }}</div>
+            <div class="field search">{{ form_row(form.search) }}</div>
+            <div class="buttons">
+                <button type="submit">Show</button>
+                <a href="{{ path('forecast') }}">Reset</a>
+            </div>
+        {{ form_end(form) }}
+
+        <p class="lead">
+            {{ from|date('D j M Y') }} to {{ to|date('D j M Y') }}
+            {%- if search is not empty %} · {{ days|length }} {{ days|length == 1 ? 'day' : 'days' }} matching “{{ search }}”{% endif %}
+        </p>
+
+        {% if days is empty %}
+            <p class="notice">No transactions match “{{ search }}” in these dates.</p>
+        {% else %}
+            <table class="forecast">
+                <thead>
+                    <tr>
+                        <th scope="col">Date</th>
+                        <th scope="col">Transactions</th>
+                        <th scope="col" class="amount">Balance</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for day in days %}
+                        {% if loop.first or day.date|date('Y-m') != days[loop.index0 - 1].date|date('Y-m') %}
+                            <tr class="month">
+                                <th colspan="3" scope="rowgroup">{{ day.date|date('F Y') }}</th>
+                            </tr>
+                        {% endif %}
+                        {% set ymd = day.date|date('Y-m-d') %}
+                        <tr id="day-{{ ymd }}" data-date="{{ ymd }}" class="{{ day.date|date('N') >= 6 ? 'weekend' }} {{ day.date == today ? 'today' }}">
+                            <td class="date">
+                                {{ day.date|date('D j M') }}
+                                <a class="add" href="{{ path('ad_hoc_new', {date: ymd}) }}" title="Add an ad-hoc transaction on {{ day.date|date('j M') }}" aria-label="Add an ad-hoc transaction on {{ day.date|date('j M') }}">+</a>
+                            </td>
+                            <td>
+                                <ul class="movements">
+                                    {% for movement in day.visibleMovements %}
+                                        <li>
+                                            <span class="description">
+                                                {% if movement.recurringTransactionId %}
+                                                    <a href="{{ path('recurring_occurrence', {id: movement.recurringTransactionId, scheduledDate: movement.scheduledDate|date('Y-m-d')}) }}">{{ movement.description }}</a>
+                                                {% else %}
+                                                    <a href="{{ path('ad_hoc_edit', {id: movement.adHocTransactionId}) }}">{{ movement.description }}</a> <span class="tag">ad-hoc</span>
+                                                {% endif %}
+                                            </span>
+                                            <span class="amount {{ movement.amountPence < 0 ? 'out' : 'in' }}">
+                                                {%- if movement.isOneOffAmount %}<span class="usual">usually {{ movement.usualAmountPence|pence }}</span> {% endif -%}
+                                                {{ movement.amountPence|pence }}
+                                            </span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                {% if day.isCheckpoint %}<span class="tag">Recorded balance</span>{% endif %}
+                            </td>
+                            <td class="amount balance" style="background: {{ balance_colour(day.balancePence) }}">{{ day.balancePence|pence }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
     {% endif %}
 {% endblock %}
