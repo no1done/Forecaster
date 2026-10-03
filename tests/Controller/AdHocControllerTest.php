@@ -119,6 +119,8 @@ final class AdHocControllerTest extends BrowserTestCase
         $this->persist(new AdHocTransaction('New tyres', -40000, self::date('2026-10-15')));
 
         $this->client->request('GET', '/ad-hoc');
+        // Without this marker the double-submit JS skips the field, and the delete is rejected once the session has used double-submit.
+        self::assertSelectorExists('input[name="_token"][data-controller="csrf-protection"]');
         $this->client->submitForm('Delete');
 
         self::assertResponseRedirects('/ad-hoc');

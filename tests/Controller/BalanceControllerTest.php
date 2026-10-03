@@ -78,6 +78,8 @@ final class BalanceControllerTest extends BrowserTestCase
         $this->persist(new BalanceCheckpoint(self::date('2026-09-30'), 10000));
 
         $this->client->request('GET', '/balances');
+        // Without this marker the double-submit JS skips the field, and the delete is rejected once the session has used double-submit.
+        self::assertSelectorExists('input[name="_token"][data-controller="csrf-protection"]');
         $this->client->submitForm('Delete');
 
         self::assertResponseRedirects('/balances');

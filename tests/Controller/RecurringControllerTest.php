@@ -150,6 +150,8 @@ final class RecurringControllerTest extends BrowserTestCase
         $this->persist($rent);
 
         $this->client->request('GET', '/recurring');
+        // Without this marker the double-submit JS skips the field, and the delete is rejected once the session has used double-submit.
+        self::assertSelectorExists('input[name="_token"][data-controller="csrf-protection"]');
         $this->client->submitForm('Delete');
 
         self::assertResponseRedirects('/recurring');

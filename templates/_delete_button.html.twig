@@ -1,4 +1,4 @@
 <form method="post" action="{{ action }}" data-turbo-confirm="{{ confirm }}">
-    <input type="hidden" name="_token" value="{{ csrf_token('submit') }}">
+    <input type="hidden" name="_token" data-controller="csrf-protection" value="{{ csrf_token('submit') }}">
     <button type="submit" class="link-button danger">Delete</button>
 </form>
