@@ -67,8 +67,8 @@ final class BalanceControllerTest extends BrowserTestCase
         ]);
 
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('form', 'Enter the date.');
-        self::assertSelectorTextContains('form', 'Enter the balance.');
+        self::assertSelectorTextContains('main form', 'Enter the date.');
+        self::assertSelectorTextContains('main form', 'Enter the balance.');
         self::assertCount(0, $this->all(BalanceCheckpoint::class));
     }
 
@@ -91,7 +91,7 @@ final class BalanceControllerTest extends BrowserTestCase
 
         $this->client->request('POST', '/balances/'.$checkpoint->getId().'/delete', ['_token' => 'csrf-token'], server: ['HTTP_ORIGIN' => 'https://evil.example']);
 
-        self::assertTrue($this->client->getResponse()->isClientError());
+        self::assertResponseRedirects('/login', message: 'an invalid CSRF token is treated as needing to authenticate again');
         self::assertCount(1, $this->all(BalanceCheckpoint::class));
     }
 

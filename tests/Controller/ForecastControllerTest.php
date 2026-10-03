@@ -7,27 +7,20 @@ use App\Entity\BalanceCheckpoint;
 use App\Entity\RecurringTransaction;
 use App\Forecast\BalanceColour;
 use App\Forecast\Recurrence\Frequency;
-use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\Test;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\Clock\Test\ClockSensitiveTrait;
 
-final class ForecastControllerTest extends WebTestCase
+final class ForecastControllerTest extends BrowserTestCase
 {
-    use ClockSensitiveTrait;
-
     #[Test]
     public function itShowsTwelveMonthsOfDailyBalancesFromToday(): void
     {
-        $client = self::createClient();
-        self::mockTime('2026-10-01 09:00');
-        $em = self::getContainer()->get(EntityManagerInterface::class);
-        $em->persist(new BalanceCheckpoint(new \DateTimeImmutable('2026-09-30'), 10000));
-        $em->persist(new RecurringTransaction('Salary', 250000, Frequency::LastWorkingDayOfMonth, new \DateTimeImmutable('2026-01-01')));
-        $em->persist(new AdHocTransaction('New tyres', -40000, new \DateTimeImmutable('2026-10-15')));
-        $em->flush();
+        $this->persist(
+            new BalanceCheckpoint(self::date('2026-09-30'), 10000),
+            new RecurringTransaction('Salary', 250000, Frequency::LastWorkingDayOfMonth, self::date('2026-01-01')),
+            new AdHocTransaction('New tyres', -40000, self::date('2026-10-15')),
+        );
 
-        $crawler = $client->request('GET', '/');
+        $crawler = $this->client->request('GET', '/');
 
         self::assertResponseIsSuccessful();
         $days = $crawler->filter('tr[data-date]');
@@ -50,10 +43,7 @@ final class ForecastControllerTest extends WebTestCase
     #[Test]
     public function itAsksForAStartingBalanceWhenThereIsNone(): void
     {
-        $client = self::createClient();
-        self::mockTime('2026-10-01 09:00');
-
-        $client->request('GET', '/');
+        $this->client->request('GET', '/');
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('main', 'starting balance');

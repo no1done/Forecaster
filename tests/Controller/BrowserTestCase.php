@@ -2,6 +2,7 @@
 
 namespace App\Tests\Controller;
 
+use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -18,6 +19,12 @@ abstract class BrowserTestCase extends WebTestCase
         // Same-origin header, as a browser sends, for stateless CSRF protection.
         $this->client = self::createClient(server: ['HTTP_ORIGIN' => 'http://localhost']);
         self::mockTime('2026-10-01 09:00');
+
+        $user = new User();
+        $user->setEmail('me@example.com');
+        $user->setPassword('not used: tests log in directly');
+        $this->persist($user);
+        $this->client->loginUser($user);
     }
 
     protected function em(): EntityManagerInterface

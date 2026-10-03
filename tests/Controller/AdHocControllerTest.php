@@ -61,9 +61,9 @@ final class AdHocControllerTest extends BrowserTestCase
         ]);
 
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('form', 'Enter a description.');
-        self::assertSelectorTextContains('form', 'Enter an amount above zero.');
-        self::assertSelectorTextContains('form', 'Enter the date.');
+        self::assertSelectorTextContains('main form', 'Enter a description.');
+        self::assertSelectorTextContains('main form', 'Enter an amount above zero.');
+        self::assertSelectorTextContains('main form', 'Enter the date.');
         self::assertCount(0, $this->all(AdHocTransaction::class));
     }
 

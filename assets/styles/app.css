@@ -332,3 +332,25 @@ button[name$="[reset]"] {
         gap: 0;
     }
 }
+
+/* Login */
+
+.site-nav .logout {
+    margin-left: auto;
+}
+
+.login {
+    max-width: 24rem;
+}
+
+.panel input[type="checkbox"] + label {
+    display: inline;
+    margin-left: 0.25rem;
+    font-weight: 400;
+}
+
+.error {
+    margin-top: 0;
+    color: var(--money-out);
+    font-weight: 500;
+}

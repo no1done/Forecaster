@@ -66,10 +66,10 @@ final class RecurringControllerTest extends BrowserTestCase
         ]);
 
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('form', 'Enter a description.');
-        self::assertSelectorTextContains('form', 'Enter an amount above zero.');
-        self::assertSelectorTextContains('form', 'Repeat every must be at least 1.');
-        self::assertSelectorTextContains('form', 'Enter the start date.');
+        self::assertSelectorTextContains('main form', 'Enter a description.');
+        self::assertSelectorTextContains('main form', 'Enter an amount above zero.');
+        self::assertSelectorTextContains('main form', 'Repeat every must be at least 1.');
+        self::assertSelectorTextContains('main form', 'Enter the start date.');
         self::assertCount(0, $this->all(RecurringTransaction::class));
     }
 
@@ -85,7 +85,7 @@ final class RecurringControllerTest extends BrowserTestCase
         ]);
 
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('form', 'The end date must be on or after the start date.');
+        self::assertSelectorTextContains('main form', 'The end date must be on or after the start date.');
     }
 
     #[Test]

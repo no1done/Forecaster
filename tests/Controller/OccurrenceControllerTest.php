@@ -84,7 +84,7 @@ final class OccurrenceControllerTest extends BrowserTestCase
         $this->client->submitForm('Save', ['occurrence[amountPence]' => '']);
 
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('form', 'Enter an amount, or 0 to skip this one.');
+        self::assertSelectorTextContains('main form', 'Enter an amount, or 0 to skip this one.');
     }
 
     private function occurrenceUrl(string $scheduledDate): string
