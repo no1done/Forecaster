@@ -1,0 +1,78 @@
+<?php
+
+namespace App\Entity;
+
+use App\Forecast\Movement;
+use App\Repository\AdHocTransactionRepository;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+
+/**
+ * A one-off purchase or payment in.
+ */
+#[ORM\Entity(repositoryClass: AdHocTransactionRepository::class)]
+#[ORM\Index(columns: ['date'])]
+class AdHocTransaction
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    private ?int $id = null;
+
+    public function __construct(
+        #[ORM\Column(length: 255)]
+        #[Assert\NotBlank]
+        #[Assert\Length(max: 255)]
+        private string $description,
+
+        /** Positive for money in, negative for money out. */
+        #[ORM\Column]
+        #[Assert\NotEqualTo(0)]
+        private int $amountPence,
+
+        #[ORM\Column(type: Types::DATE_IMMUTABLE)]
+        private \DateTimeImmutable $date,
+    ) {
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getDescription(): string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(string $description): void
+    {
+        $this->description = $description;
+    }
+
+    public function getAmountPence(): int
+    {
+        return $this->amountPence;
+    }
+
+    public function setAmountPence(int $amountPence): void
+    {
+        $this->amountPence = $amountPence;
+    }
+
+    public function getDate(): \DateTimeImmutable
+    {
+        return $this->date;
+    }
+
+    public function setDate(\DateTimeImmutable $date): void
+    {
+        $this->date = $date;
+    }
+
+    public function toMovement(): Movement
+    {
+        return new Movement($this->date, $this->amountPence, $this->description);
+    }
+}

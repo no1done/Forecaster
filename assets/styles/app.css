@@ -1,3 +1,96 @@
+:root {
+    --text: #1f2328;
+    --muted: #656d76;
+    --border: #d0d7de;
+    --surface: #ffffff;
+    --background: #f6f8fa;
+    --money-in: #1a7f37;
+    --money-out: #b42318;
+}
+
 body {
-    background-color: skyblue;
+    margin: 0;
+    background: var(--background);
+    color: var(--text);
+    font: 15px/1.4 system-ui, sans-serif;
+}
+
+main {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+}
+
+.forecast {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+}
+
+.forecast th,
+.forecast td {
+    padding: 0.35rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.forecast thead th {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+}
+
+.forecast .month th {
+    padding-top: 1rem;
+    background: var(--background);
+    font-size: 1.05rem;
+}
+
+.forecast .date {
+    white-space: nowrap;
+}
+
+.forecast .weekend .date {
+    color: var(--muted);
+}
+
+.forecast .today .date {
+    font-weight: 700;
+}
+
+.forecast .amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.forecast .balance {
+    width: 8rem;
+    font-weight: 600;
+}
+
+.movements {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.movements li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.movements .in {
+    color: var(--money-in);
+}
+
+.movements .out {
+    color: var(--money-out);
+}
+
+.checkpoint {
+    font-size: 0.8rem;
+    color: var(--muted);
 }

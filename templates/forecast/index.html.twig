@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Forecast{% endblock %}
+
+{% block body %}
+<main>
+    <h1>Next 12 months</h1>
+
+    {% if days is null %}
+        <p class="notice">Add a starting balance to see your forecast.</p>
+    {% else %}
+        <table class="forecast">
+            <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Transactions</th>
+                    <th scope="col" class="amount">Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in days %}
+                    {% if loop.first or day.date|date('j') == 1 %}
+                        <tr class="month">
+                            <th colspan="3" scope="rowgroup">{{ day.date|date('F Y') }}</th>
+                        </tr>
+                    {% endif %}
+                    <tr data-date="{{ day.date|date('Y-m-d') }}" class="{{ day.date|date('N') >= 6 ? 'weekend' }} {{ day.date == today ? 'today' }}">
+                        <td class="date">{{ day.date|date('D j M') }}</td>
+                        <td>
+                            <ul class="movements">
+                                {% for movement in day.movements %}
+                                    <li>
+                                        <span>{{ movement.description }}</span>
+                                        <span class="amount {{ movement.amountPence < 0 ? 'out' : 'in' }}">{{ movement.amountPence|pence }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            {% if day.isCheckpoint %}<span class="checkpoint">Checkpoint</span>{% endif %}
+                        </td>
+                        <td class="amount balance" style="background: {{ balance_colour(day.balancePence) }}">{{ day.balancePence|pence }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</main>
+{% endblock %}

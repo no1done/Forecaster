@@ -1,0 +1,113 @@
+<?php
+
+namespace App\Tests\Forecast;
+
+use App\Entity\AdHocTransaction;
+use App\Entity\BalanceCheckpoint;
+use App\Entity\RecurringTransaction;
+use App\Forecast\ForecastDay;
+use App\Forecast\Forecaster;
+use App\Forecast\NoStartingBalance;
+use App\Forecast\Recurrence\Frequency;
+use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\Test;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+
+final class ForecasterTest extends KernelTestCase
+{
+    private EntityManagerInterface $em;
+
+    protected function setUp(): void
+    {
+        self::bootKernel();
+        $this->em = self::getContainer()->get(EntityManagerInterface::class);
+    }
+
+    #[Test]
+    public function itForecastsFromStoredCheckpointsRecurringAndAdHocTransactions(): void
+    {
+        $this->persist(
+            new BalanceCheckpoint(self::date('2026-10-01'), 10000),
+            new RecurringTransaction('Salary', 250000, Frequency::LastWorkingDayOfMonth, self::date('2026-01-01')),
+            new RecurringTransaction('Rent', -90000, Frequency::Monthly, self::date('2026-01-01')),
+            new AdHocTransaction('New tyres', -40000, self::date('2026-10-15')),
+        );
+
+        $days = $this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-11-30'));
+
+        self::assertCount(61, $days);
+        $byDate = self::byDate($days);
+        self::assertSame(10000, $byDate['2026-10-01']->balancePence, 'October rent is already in the checkpoint');
+        self::assertSame(10000, $byDate['2026-10-14']->balancePence);
+        self::assertSame(-30000, $byDate['2026-10-15']->balancePence);
+        self::assertSame(130000, $byDate['2026-10-30']->balancePence, 'Salary, and November rent moved back from Sunday 1st');
+        self::assertSame(['Salary', 'Rent'], array_map(static fn ($m) => $m->description, $byDate['2026-10-30']->movements));
+        self::assertSame(380000, $byDate['2026-11-30']->balancePence);
+    }
+
+    #[Test]
+    public function aLaterCheckpointCorrectsTheForecast(): void
+    {
+        $this->persist(
+            new BalanceCheckpoint(self::date('2026-10-01'), 10000),
+            new BalanceCheckpoint(self::date('2026-11-02'), 125000),
+            new RecurringTransaction('Salary', 250000, Frequency::LastWorkingDayOfMonth, self::date('2026-01-01')),
+        );
+
+        $byDate = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-11-30')));
+
+        self::assertSame(260000, $byDate['2026-11-01']->balancePence);
+        self::assertSame(125000, $byDate['2026-11-02']->balancePence);
+        self::assertSame(375000, $byDate['2026-11-30']->balancePence);
+    }
+
+    #[Test]
+    public function recurringTransactionsStopAfterTheirEndDate(): void
+    {
+        $this->persist(
+            new BalanceCheckpoint(self::date('2026-10-01'), 10000),
+            new RecurringTransaction('Phone contract', -2500, Frequency::Monthly, self::date('2025-10-10'), endDate: self::date('2026-10-10')),
+        );
+
+        $byDate = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-11-30')));
+
+        self::assertSame(7500, $byDate['2026-11-30']->balancePence);
+    }
+
+    #[Test]
+    public function itNeedsAStartingBalance(): void
+    {
+        $this->expectException(NoStartingBalance::class);
+
+        $this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-11-30'));
+    }
+
+    private function forecaster(): Forecaster
+    {
+        return self::getContainer()->get(Forecaster::class);
+    }
+
+    private function persist(object ...$entities): void
+    {
+        foreach ($entities as $entity) {
+            $this->em->persist($entity);
+        }
+        $this->em->flush();
+        $this->em->clear();
+    }
+
+    private static function date(string $date): \DateTimeImmutable
+    {
+        return new \DateTimeImmutable($date);
+    }
+
+    /**
+     * @param list<ForecastDay> $days
+     *
+     * @return array<string, ForecastDay>
+     */
+    private static function byDate(array $days): array
+    {
+        return array_combine(array_map(static fn (ForecastDay $d) => $d->date->format('Y-m-d'), $days), $days);
+    }
+}
