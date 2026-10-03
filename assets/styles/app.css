@@ -570,3 +570,45 @@ button[name$="[reset]"]:hover {
         padding: 0.4rem 0.45rem;
     }
 }
+
+/* Date picker (flatpickr), in the ledger's colours */
+
+.flatpickr-calendar {
+    background: var(--parchment-light);
+    border: 1px solid var(--rule);
+    box-shadow: var(--shadow);
+    font-family: var(--font-body);
+}
+
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    background: var(--parchment-light);
+    color: var(--forest);
+    fill: var(--forest);
+}
+
+.flatpickr-day {
+    color: var(--ink);
+}
+
+.flatpickr-day:hover,
+.flatpickr-day:focus {
+    background: var(--parchment-deep);
+    border-color: var(--parchment-deep);
+}
+
+.flatpickr-day.today {
+    border-color: var(--gilt);
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+    background: var(--forest-light);
+    border-color: var(--forest-light);
+    color: var(--parchment-light);
+}
+
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover {
+    color: var(--rule);
+}

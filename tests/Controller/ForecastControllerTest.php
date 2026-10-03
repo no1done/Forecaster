@@ -77,6 +77,8 @@ final class ForecastControllerTest extends BrowserTestCase
         self::assertSame('£60.00', $crawler->filter('tr[data-date="2026-02-10"] .balance')->text());
         self::assertSame('2026-01-31', $crawler->filter('input[name="from"]')->attr('min'));
         self::assertSame('2026-02-01', $crawler->filter('input[name="from"]')->attr('value'));
+        // Shown as DD/MM/YYYY by the datepicker, whatever the browser's locale.
+        self::assertSame('datepicker', $crawler->filter('input[name="from"]')->attr('data-controller'));
     }
 
     #[Test]
