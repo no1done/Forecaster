@@ -75,6 +75,34 @@ final class ForecasterTest extends KernelTestCase
     }
 
     #[Test]
+    public function aOneOffAmountChangesJustThatOccurrence(): void
+    {
+        $rent = new RecurringTransaction('Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
+        $rent->overrideAmount(self::date('2026-11-01'), -95000);
+        $this->persist(new BalanceCheckpoint(self::date('2026-10-01'), 300000), $rent);
+
+        $byDate = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-12-31')));
+
+        self::assertSame(-95000, $byDate['2026-10-30']->movements[0]->amountPence, 'November rent, paid early because the 1st is a Sunday');
+        self::assertSame(205000, $byDate['2026-10-30']->balancePence);
+        self::assertSame(-90000, $byDate['2026-12-01']->movements[0]->amountPence);
+        self::assertSame(115000, $byDate['2026-12-01']->balancePence);
+    }
+
+    #[Test]
+    public function aZeroOneOffSkipsThatOccurrence(): void
+    {
+        $gym = new RecurringTransaction('Gym', -3000, Frequency::Monthly, self::date('2026-01-15'));
+        $gym->overrideAmount(self::date('2026-10-15'), 0);
+        $this->persist(new BalanceCheckpoint(self::date('2026-10-01'), 10000), $gym);
+
+        $byDate = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-11-30')));
+
+        self::assertSame(10000, $byDate['2026-10-15']->balancePence);
+        self::assertSame(7000, $byDate['2026-11-16']->balancePence);
+    }
+
+    #[Test]
     public function itNeedsAStartingBalance(): void
     {
         $this->expectException(NoStartingBalance::class);

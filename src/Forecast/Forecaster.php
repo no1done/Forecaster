@@ -37,8 +37,8 @@ final class Forecaster
             $this->adHocTransactions->findBetween($after, $to),
         );
         foreach ($this->recurringTransactions->findNotEndedBefore($after) as $recurring) {
-            foreach ($this->occurrences->between($recurring->getRule(), $after, $to) as $date) {
-                $movements[] = new Movement($date, $recurring->getAmountPence(), $recurring->getDescription());
+            foreach ($this->occurrences->between($recurring->getRule(), $after, $to) as $occurrence) {
+                $movements[] = new Movement($occurrence->date, $recurring->getAmountPenceFor($occurrence->scheduledDate), $recurring->getDescription());
             }
         }
 

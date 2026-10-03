@@ -40,6 +40,20 @@ final readonly class RecurrenceRule
         };
     }
 
+    public function isScheduledOn(\DateTimeImmutable $date): bool
+    {
+        if ($date < $this->startDate || (null !== $this->endDate && $date > $this->endDate)) {
+            return false;
+        }
+
+        for ($n = 0; ; ++$n) {
+            $nominal = $this->nominalDate($n);
+            if ($nominal >= $date) {
+                return $nominal->format('Y-m-d') === $date->format('Y-m-d');
+            }
+        }
+    }
+
     private static function clampedDate(int $year, int $month, int $day): \DateTimeImmutable
     {
         $firstOfMonth = (new \DateTimeImmutable())->setDate($year, $month, 1)->setTime(0, 0);

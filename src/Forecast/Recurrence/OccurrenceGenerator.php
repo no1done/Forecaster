@@ -19,7 +19,7 @@ final class OccurrenceGenerator
     }
 
     /**
-     * @return list<\DateTimeImmutable> adjusted dates within $from..$to inclusive
+     * @return list<Occurrence> those whose adjusted date is within $from..$to inclusive
      */
     public function between(RecurrenceRule $rule, \DateTimeImmutable $from, \DateTimeImmutable $to): array
     {
@@ -32,7 +32,7 @@ final class OccurrenceGenerator
         for ($n = 0; ($nominal = $rule->nominalDate($n)) <= $lastNominal; ++$n) {
             $date = $this->calendar->onOrBefore($nominal);
             if ($date >= $from && $date <= $to) {
-                $occurrences[] = $date;
+                $occurrences[] = new Occurrence($nominal, $date);
             }
         }
 

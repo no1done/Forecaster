@@ -5,6 +5,7 @@ namespace App\Tests\Forecast\Recurrence;
 use App\Forecast\Calendar\EnglandAndWalesBankHolidays;
 use App\Forecast\Calendar\WorkingDayCalendar;
 use App\Forecast\Recurrence\Frequency;
+use App\Forecast\Recurrence\Occurrence;
 use App\Forecast\Recurrence\OccurrenceGenerator;
 use App\Forecast\Recurrence\RecurrenceRule;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -24,7 +25,38 @@ final class OccurrenceGeneratorTest extends TestCase
 
         $occurrences = $generator->between($rule, new \DateTimeImmutable($from), new \DateTimeImmutable($to));
 
-        self::assertSame($expected, array_map(static fn (\DateTimeImmutable $d) => $d->format('Y-m-d'), $occurrences));
+        self::assertSame($expected, array_map(static fn (Occurrence $o) => $o->date->format('Y-m-d'), $occurrences));
+    }
+
+    #[Test]
+    public function eachOccurrenceKeepsTheDateItWasScheduledFor(): void
+    {
+        $generator = new OccurrenceGenerator(new WorkingDayCalendar(new EnglandAndWalesBankHolidays()));
+        $rule = new RecurrenceRule(Frequency::Monthly, new \DateTimeImmutable('2026-01-01'));
+
+        $occurrences = $generator->between($rule, new \DateTimeImmutable('2026-10-15'), new \DateTimeImmutable('2026-12-15'));
+
+        self::assertSame(
+            [['2026-11-01', '2026-10-30'], ['2026-12-01', '2026-12-01']],
+            array_map(static fn (Occurrence $o) => [$o->scheduledDate->format('Y-m-d'), $o->date->format('Y-m-d')], $occurrences),
+        );
+    }
+
+    #[Test]
+    public function aRuleKnowsWhichDatesItIsScheduledOn(): void
+    {
+        $monthly = new RecurrenceRule(Frequency::Monthly, new \DateTimeImmutable('2026-01-31'), endDate: new \DateTimeImmutable('2026-12-31'));
+
+        self::assertTrue($monthly->isScheduledOn(new \DateTimeImmutable('2026-01-31')));
+        self::assertTrue($monthly->isScheduledOn(new \DateTimeImmutable('2026-02-28')));
+        self::assertTrue($monthly->isScheduledOn(new \DateTimeImmutable('2026-03-31')));
+        self::assertFalse($monthly->isScheduledOn(new \DateTimeImmutable('2026-03-28')), 'not the adjusted date, and no drift');
+        self::assertFalse($monthly->isScheduledOn(new \DateTimeImmutable('2025-12-31')), 'before the start');
+        self::assertFalse($monthly->isScheduledOn(new \DateTimeImmutable('2027-01-31')), 'after the end');
+
+        $fortnightly = new RecurrenceRule(Frequency::Weekly, new \DateTimeImmutable('2026-01-02'), interval: 2);
+        self::assertTrue($fortnightly->isScheduledOn(new \DateTimeImmutable('2026-01-16')));
+        self::assertFalse($fortnightly->isScheduledOn(new \DateTimeImmutable('2026-01-09')));
     }
 
     /**
