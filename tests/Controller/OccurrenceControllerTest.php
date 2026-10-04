@@ -14,8 +14,8 @@ final class OccurrenceControllerTest extends BrowserTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->rent = new RecurringTransaction('Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
-        $this->persist(new BalanceCheckpoint(self::date('2026-09-30'), 300000), $this->rent);
+        $this->rent = new RecurringTransaction($this->user(), 'Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
+        $this->persist(new BalanceCheckpoint($this->user(), self::date('2026-09-30'), 300000), $this->rent);
     }
 
     #[Test]

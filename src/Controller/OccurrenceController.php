@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\RecurringTransaction;
 use App\Forecast\Calendar\WorkingDayCalendar;
 use App\Form\OccurrenceType;
+use App\Security\OwnerVoter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\SubmitButton;
@@ -12,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapDateTime;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * One occurrence of a recurring transaction, identified by the date its rule schedules.
@@ -19,6 +21,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class OccurrenceController extends AbstractController
 {
     #[Route('/recurring/{id}/occurrences/{scheduledDate}', name: 'recurring_occurrence', requirements: ['scheduledDate' => '\d{4}-\d{2}-\d{2}'], methods: ['GET', 'POST'])]
+    #[IsGranted(OwnerVoter::OWNER, 'recurring')]
     public function edit(
         Request $request,
         RecurringTransaction $recurring,

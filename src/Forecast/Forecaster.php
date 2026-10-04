@@ -5,6 +5,7 @@ namespace App\Forecast;
 use App\Entity\AdHocTransaction;
 use App\Entity\BalanceCheckpoint;
 use App\Entity\RecurringTransaction;
+use App\Entity\User;
 use App\Forecast\Calendar\WorkingDayCalendar;
 use App\Forecast\Recurrence\OccurrenceGenerator;
 use App\Repository\AdHocTransactionRepository;
@@ -12,7 +13,7 @@ use App\Repository\BalanceCheckpointRepository;
 use App\Repository\RecurringTransactionRepository;
 
 /**
- * Builds the daily forecast from everything stored in the database.
+ * Builds a user's daily forecast from everything they have stored.
  */
 final class Forecaster
 {
@@ -29,17 +30,17 @@ final class Forecaster
     /**
      * @return list<ForecastDay>
      */
-    public function forecast(\DateTimeImmutable $from, \DateTimeImmutable $to): array
+    public function forecast(User $owner, \DateTimeImmutable $from, \DateTimeImmutable $to): array
     {
-        $anchor = $this->checkpoints->findLatestOnOrBefore($from) ?? throw NoStartingBalance::before($from);
+        $anchor = $this->checkpoints->findLatestOnOrBefore($owner, $from) ?? throw NoStartingBalance::before($from);
         // Anything on the anchor's own day is already in its balance.
         $after = $anchor->getDate()->modify('+1 day');
 
         $movements = array_map(
             static fn (AdHocTransaction $t) => $t->toMovement(),
-            $this->adHocTransactions->findBetween($after, $to),
+            $this->adHocTransactions->findBetween($owner, $after, $to),
         );
-        foreach ($this->recurringTransactions->findNotEndedBefore($after) as $recurring) {
+        foreach ($this->recurringTransactions->findNotEndedBefore($owner, $after) as $recurring) {
             $moved = $recurring->getMovedDates();
             foreach ($this->occurrences->between($recurring->getRule(), $after, $to) as $occurrence) {
                 if (!isset($moved[$occurrence->scheduledDate->format('Y-m-d')])) {
@@ -56,7 +57,7 @@ final class Forecaster
         }
 
         return $this->calculator->calculate(
-            array_map(static fn (BalanceCheckpoint $c) => $c->toCheckpoint(), $this->checkpoints->findBetween($anchor->getDate(), $to)),
+            array_map(static fn (BalanceCheckpoint $c) => $c->toCheckpoint(), $this->checkpoints->findBetween($owner, $anchor->getDate(), $to)),
             $movements,
             $from,
             $to,

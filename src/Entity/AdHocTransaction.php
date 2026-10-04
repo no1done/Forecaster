@@ -11,8 +11,8 @@ use Doctrine\ORM\Mapping as ORM;
  * A one-off purchase or payment in.
  */
 #[ORM\Entity(repositoryClass: AdHocTransactionRepository::class)]
-#[ORM\Index(columns: ['date'])]
-class AdHocTransaction
+#[ORM\Index(columns: ['owner_id', 'date'])]
+class AdHocTransaction implements OwnedByUser
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -23,6 +23,10 @@ class AdHocTransaction
     private bool $hiddenFromForecast = false;
 
     public function __construct(
+        #[ORM\ManyToOne]
+        #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+        private User $owner,
+
         #[ORM\Column(length: 255)]
         private string $description,
 
@@ -38,6 +42,11 @@ class AdHocTransaction
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getOwner(): User
+    {
+        return $this->owner;
     }
 
     /**

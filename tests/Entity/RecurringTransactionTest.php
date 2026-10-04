@@ -3,6 +3,7 @@
 namespace App\Tests\Entity;
 
 use App\Entity\RecurringTransaction;
+use App\Entity\User;
 use App\Forecast\Recurrence\Frequency;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -133,7 +134,7 @@ final class RecurringTransactionTest extends TestCase
 
     private static function electricity(): RecurringTransaction
     {
-        return new RecurringTransaction('Electricity', -9000, Frequency::Monthly, self::date('2026-01-01'));
+        return new RecurringTransaction(new User(), 'Electricity', -9000, Frequency::Monthly, self::date('2026-01-01'));
     }
 
     private static function date(string $date): \DateTimeImmutable

@@ -4,16 +4,20 @@ namespace App\Controller;
 
 use App\Clock\Today;
 use App\Entity\AdHocTransaction;
+use App\Entity\User;
 use App\Form\AdHocTransactionType;
 use App\Form\Data\AdHocTransactionData;
 use App\Repository\AdHocTransactionRepository;
+use App\Security\OwnerVoter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsCsrfTokenValid;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/ad-hoc')]
 final class AdHocController extends AbstractController
@@ -24,11 +28,11 @@ final class AdHocController extends AbstractController
     }
 
     #[Route('', name: 'ad_hoc_index', methods: ['GET'])]
-    public function index(AdHocTransactionRepository $transactions, Today $today): Response
+    public function index(AdHocTransactionRepository $transactions, Today $today, #[CurrentUser] User $user): Response
     {
         return $this->render('ad_hoc/index.html.twig', [
-            'upcoming' => $transactions->findOnOrAfter($today->date()),
-            'past' => $transactions->findRecentBefore($today->date(), 20),
+            'upcoming' => $transactions->findOnOrAfter($user, $today->date()),
+            'past' => $transactions->findRecentBefore($user, $today->date(), 20),
         ]);
     }
 
@@ -36,6 +40,7 @@ final class AdHocController extends AbstractController
     public function new(
         Request $request,
         Today $today,
+        #[CurrentUser] User $user,
         #[MapQueryParameter(filter: \FILTER_VALIDATE_REGEXP, options: ['regexp' => '/^\d{4}-\d{2}-\d{2}$/'])] ?string $date = null,
     ): Response {
         $data = new AdHocTransactionData();
@@ -45,7 +50,7 @@ final class AdHocController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->em->persist($data->toEntity());
+            $this->em->persist($data->toEntity($user));
             $this->em->flush();
 
             return $this->redirectToDay($data->date);
@@ -55,6 +60,7 @@ final class AdHocController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'ad_hoc_edit', methods: ['GET', 'POST'])]
+    #[IsGranted(OwnerVoter::OWNER, 'transaction')]
     public function edit(Request $request, AdHocTransaction $transaction): Response
     {
         $data = AdHocTransactionData::fromEntity($transaction);
@@ -73,6 +79,7 @@ final class AdHocController extends AbstractController
 
     #[Route('/{id}/delete', name: 'ad_hoc_delete', methods: ['POST'])]
     #[IsCsrfTokenValid('submit')]
+    #[IsGranted(OwnerVoter::OWNER, 'transaction')]
     public function delete(AdHocTransaction $transaction): Response
     {
         $this->em->remove($transaction);

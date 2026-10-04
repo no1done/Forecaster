@@ -8,11 +8,12 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * The real account balance at the end of a day. The earliest one is the
- * starting balance.
+ * The real account balance at the end of a day. A user's earliest one is
+ * their starting balance.
  */
 #[ORM\Entity(repositoryClass: BalanceCheckpointRepository::class)]
-class BalanceCheckpoint
+#[ORM\UniqueConstraint(columns: ['owner_id', 'date'])]
+class BalanceCheckpoint implements OwnedByUser
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -20,7 +21,11 @@ class BalanceCheckpoint
     private ?int $id = null;
 
     public function __construct(
-        #[ORM\Column(type: Types::DATE_IMMUTABLE, unique: true)]
+        #[ORM\ManyToOne]
+        #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+        private User $owner,
+
+        #[ORM\Column(type: Types::DATE_IMMUTABLE)]
         private \DateTimeImmutable $date,
 
         #[ORM\Column]
@@ -31,6 +36,11 @@ class BalanceCheckpoint
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getOwner(): User
+    {
+        return $this->owner;
     }
 
     public function getDate(): \DateTimeImmutable

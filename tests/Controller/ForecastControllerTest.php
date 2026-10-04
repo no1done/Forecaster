@@ -15,9 +15,9 @@ final class ForecastControllerTest extends BrowserTestCase
     public function itShowsTwelveMonthsOfDailyBalancesFromToday(): void
     {
         $this->persist(
-            new BalanceCheckpoint(self::date('2026-09-30'), 10000),
-            new RecurringTransaction('Salary', 250000, Frequency::LastWorkingDayOfMonth, self::date('2026-01-01')),
-            new AdHocTransaction('New tyres', -40000, self::date('2026-10-15')),
+            new BalanceCheckpoint($this->user(), self::date('2026-09-30'), 10000),
+            new RecurringTransaction($this->user(), 'Salary', 250000, Frequency::LastWorkingDayOfMonth, self::date('2026-01-01')),
+            new AdHocTransaction($this->user(), 'New tyres', -40000, self::date('2026-10-15')),
         );
 
         $crawler = $this->client->request('GET', '/');
@@ -43,12 +43,12 @@ final class ForecastControllerTest extends BrowserTestCase
     #[Test]
     public function hiddenTransactionsAreNotListedButStillChangeTheBalance(): void
     {
-        $savings = new RecurringTransaction('Savings', -20000, Frequency::Monthly, self::date('2026-10-05'));
+        $savings = new RecurringTransaction($this->user(), 'Savings', -20000, Frequency::Monthly, self::date('2026-10-05'));
         $savings->setHiddenFromForecast(true);
         $this->persist(
-            new BalanceCheckpoint(self::date('2026-09-30'), 100000),
+            new BalanceCheckpoint($this->user(), self::date('2026-09-30'), 100000),
             $savings,
-            new AdHocTransaction('New tyres', -40000, self::date('2026-10-05')),
+            new AdHocTransaction($this->user(), 'New tyres', -40000, self::date('2026-10-05')),
         );
 
         $crawler = $this->client->request('GET', '/');
@@ -63,8 +63,8 @@ final class ForecastControllerTest extends BrowserTestCase
     public function itShowsTheDatesPickedFromTheFirstBalanceOnwards(): void
     {
         $this->persist(
-            new BalanceCheckpoint(self::date('2026-01-31'), 10000),
-            new AdHocTransaction('New tyres', -4000, self::date('2026-02-10')),
+            new BalanceCheckpoint($this->user(), self::date('2026-01-31'), 10000),
+            new AdHocTransaction($this->user(), 'New tyres', -4000, self::date('2026-02-10')),
         );
 
         $crawler = $this->client->request('GET', '/?from=2026-02-01&to=2026-03-15');
@@ -84,7 +84,7 @@ final class ForecastControllerTest extends BrowserTestCase
     #[Test]
     public function aStartDateAloneShowsTwelveMonthsFromIt(): void
     {
-        $this->persist(new BalanceCheckpoint(self::date('2026-01-31'), 10000));
+        $this->persist(new BalanceCheckpoint($this->user(), self::date('2026-01-31'), 10000));
 
         $crawler = $this->client->request('GET', '/?from=2026-03-01&to=');
 
@@ -97,7 +97,7 @@ final class ForecastControllerTest extends BrowserTestCase
     #[Test]
     public function datesBeforeTheFirstBalanceAreRejected(): void
     {
-        $this->persist(new BalanceCheckpoint(self::date('2026-09-30'), 10000));
+        $this->persist(new BalanceCheckpoint($this->user(), self::date('2026-09-30'), 10000));
 
         $crawler = $this->client->request('GET', '/?from=2026-09-01&to=2026-12-31');
 
@@ -110,7 +110,7 @@ final class ForecastControllerTest extends BrowserTestCase
     #[Test]
     public function anEndDateBeforeTheStartIsRejected(): void
     {
-        $this->persist(new BalanceCheckpoint(self::date('2026-09-30'), 10000));
+        $this->persist(new BalanceCheckpoint($this->user(), self::date('2026-09-30'), 10000));
 
         $this->client->request('GET', '/?from=2026-12-01&to=2026-11-01');
 
@@ -121,9 +121,9 @@ final class ForecastControllerTest extends BrowserTestCase
     public function searchingListsOnlyDaysWithMatchingTransactions(): void
     {
         $this->persist(
-            new BalanceCheckpoint(self::date('2026-09-30'), 10000),
-            new RecurringTransaction('Salary', 250000, Frequency::LastWorkingDayOfMonth, self::date('2026-01-01')),
-            new AdHocTransaction('New tyres', -40000, self::date('2026-10-15')),
+            new BalanceCheckpoint($this->user(), self::date('2026-09-30'), 10000),
+            new RecurringTransaction($this->user(), 'Salary', 250000, Frequency::LastWorkingDayOfMonth, self::date('2026-01-01')),
+            new AdHocTransaction($this->user(), 'New tyres', -40000, self::date('2026-10-15')),
         );
 
         $crawler = $this->client->request('GET', '/?from=2026-10-01&to=2026-12-31&search=salary');
@@ -138,7 +138,7 @@ final class ForecastControllerTest extends BrowserTestCase
     #[Test]
     public function aSearchWithNoMatchesSaysSo(): void
     {
-        $this->persist(new BalanceCheckpoint(self::date('2026-09-30'), 10000));
+        $this->persist(new BalanceCheckpoint($this->user(), self::date('2026-09-30'), 10000));
 
         $this->client->request('GET', '/?search=lottery');
 

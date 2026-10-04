@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\RecurringTransaction;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -22,12 +23,14 @@ class RecurringTransactionRepository extends ServiceEntityRepository
      *
      * @return list<RecurringTransaction>
      */
-    public function findNotEndedBefore(\DateTimeImmutable $from): array
+    public function findNotEndedBefore(User $owner, \DateTimeImmutable $from): array
     {
         return $this->createQueryBuilder('r')
             ->leftJoin('r.occurrenceOverrides', 'o')
             ->addSelect('o')
-            ->where('r.endDate IS NULL OR r.endDate >= :from')
+            ->where('r.owner = :owner')
+            ->andWhere('r.endDate IS NULL OR r.endDate >= :from')
+            ->setParameter('owner', $owner)
             ->setParameter('from', $from)
             ->orderBy('r.id')
             ->getQuery()
@@ -37,8 +40,8 @@ class RecurringTransactionRepository extends ServiceEntityRepository
     /**
      * @return list<RecurringTransaction>
      */
-    public function findAllByDescription(): array
+    public function findAllByDescription(User $owner): array
     {
-        return $this->findBy([], ['description' => 'ASC']);
+        return $this->findBy(['owner' => $owner], ['description' => 'ASC']);
     }
 }

@@ -11,7 +11,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: RecurringTransactionRepository::class)]
-class RecurringTransaction
+class RecurringTransaction implements OwnedByUser
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -26,6 +26,10 @@ class RecurringTransaction
     private Collection $occurrenceOverrides;
 
     public function __construct(
+        #[ORM\ManyToOne]
+        #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+        private User $owner,
+
         #[ORM\Column(length: 255)]
         private string $description,
 
@@ -52,6 +56,11 @@ class RecurringTransaction
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getOwner(): User
+    {
+        return $this->owner;
     }
 
     /**

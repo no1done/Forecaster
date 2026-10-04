@@ -44,7 +44,7 @@ final class BalanceControllerTest extends BrowserTestCase
     #[Test]
     public function recordingADateAgainUpdatesThatDay(): void
     {
-        $this->persist(new BalanceCheckpoint(self::date('2026-09-30'), 10000));
+        $this->persist(new BalanceCheckpoint($this->user(), self::date('2026-09-30'), 10000));
 
         $this->client->request('GET', '/balances');
         $this->client->submitForm('Record balance', [
@@ -75,7 +75,7 @@ final class BalanceControllerTest extends BrowserTestCase
     #[Test]
     public function aBalanceCanBeDeleted(): void
     {
-        $this->persist(new BalanceCheckpoint(self::date('2026-09-30'), 10000));
+        $this->persist(new BalanceCheckpoint($this->user(), self::date('2026-09-30'), 10000));
 
         $this->client->request('GET', '/balances');
         // Without this marker the double-submit JS skips the field, and the delete is rejected once the session has used double-submit.
@@ -89,7 +89,7 @@ final class BalanceControllerTest extends BrowserTestCase
     #[Test]
     public function aDeleteFromAnotherSiteIsRefused(): void
     {
-        $this->persist($checkpoint = new BalanceCheckpoint(self::date('2026-09-30'), 10000));
+        $this->persist($checkpoint = new BalanceCheckpoint($this->user(), self::date('2026-09-30'), 10000));
 
         $this->client->request('POST', '/balances/'.$checkpoint->getId().'/delete', ['_token' => 'csrf-token'], server: ['HTTP_ORIGIN' => 'https://evil.example']);
 

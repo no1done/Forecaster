@@ -14,17 +14,35 @@ abstract class BrowserTestCase extends WebTestCase
 
     protected KernelBrowser $client;
 
+    private int $userId;
+
     protected function setUp(): void
     {
         // Same-origin header, as a browser sends, for stateless CSRF protection.
         $this->client = self::createClient(server: ['HTTP_ORIGIN' => 'http://localhost']);
         self::mockTime('2026-10-01 09:00');
 
+        $user = $this->createUser('me@example.com');
+        $this->userId = $user->getId();
+        $this->client->loginUser($user);
+    }
+
+    /**
+     * The logged-in user, attached to the current entity manager.
+     */
+    protected function user(): User
+    {
+        return $this->em()->getReference(User::class, $this->userId);
+    }
+
+    protected function createUser(string $email): User
+    {
         $user = new User();
-        $user->setEmail('me@example.com');
+        $user->setEmail($email);
         $user->setPassword('not used: tests log in directly');
         $this->persist($user);
-        $this->client->loginUser($user);
+
+        return $user;
     }
 
     protected function em(): EntityManagerInterface

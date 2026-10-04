@@ -13,7 +13,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-#[AsCommand(name: 'app:set-password', description: 'Create the login user, or change their password')]
+#[AsCommand(name: 'app:set-password', description: 'Create a user, or change their password')]
 final class SetPasswordCommand
 {
     private const int MIN_LENGTH = 12;

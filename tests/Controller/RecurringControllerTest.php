@@ -57,7 +57,7 @@ final class RecurringControllerTest extends BrowserTestCase
     #[Test]
     public function itCanBeHiddenFromTheForecastAndShownAgain(): void
     {
-        $this->persist($savings = new RecurringTransaction('Savings', -20000, Frequency::Monthly, self::date('2026-10-05')));
+        $this->persist($savings = new RecurringTransaction($this->user(), 'Savings', -20000, Frequency::Monthly, self::date('2026-10-05')));
 
         $this->client->request('GET', '/recurring/'.$savings->getId().'/edit');
         self::assertCheckboxNotChecked('recurring[hiddenFromForecast]');
@@ -111,7 +111,7 @@ final class RecurringControllerTest extends BrowserTestCase
     #[Test]
     public function itEditsARecurringTransactionAndKeepsItsOneOffs(): void
     {
-        $rent = new RecurringTransaction('Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
+        $rent = new RecurringTransaction($this->user(), 'Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
         $rent->overrideAmount(self::date('2026-11-01'), -95000);
         $this->persist($rent);
 
@@ -129,8 +129,8 @@ final class RecurringControllerTest extends BrowserTestCase
     public function itListsRecurringTransactions(): void
     {
         $this->persist(
-            new RecurringTransaction('Salary', 250000, Frequency::LastWorkingDayOfMonth, self::date('2026-01-01')),
-            new RecurringTransaction('Rent', -90000, Frequency::Monthly, self::date('2026-01-01')),
+            new RecurringTransaction($this->user(), 'Salary', 250000, Frequency::LastWorkingDayOfMonth, self::date('2026-01-01')),
+            new RecurringTransaction($this->user(), 'Rent', -90000, Frequency::Monthly, self::date('2026-01-01')),
         );
 
         $this->client->request('GET', '/recurring');
@@ -145,7 +145,7 @@ final class RecurringControllerTest extends BrowserTestCase
     #[Test]
     public function deletingARecurringTransactionDeletesItsOneOffs(): void
     {
-        $rent = new RecurringTransaction('Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
+        $rent = new RecurringTransaction($this->user(), 'Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
         $rent->overrideAmount(self::date('2026-11-01'), -95000);
         $this->persist($rent);
 

@@ -3,6 +3,7 @@
 namespace App\Form\Data;
 
 use App\Entity\AdHocTransaction;
+use App\Entity\User;
 use Symfony\Component\Validator\Constraints as Assert;
 
 final class AdHocTransactionData
@@ -30,9 +31,9 @@ final class AdHocTransactionData
         return $data;
     }
 
-    public function toEntity(): AdHocTransaction
+    public function toEntity(User $owner): AdHocTransaction
     {
-        $transaction = new AdHocTransaction($this->description, $this->amountPence, $this->date);
+        $transaction = new AdHocTransaction($owner, $this->description, $this->amountPence, $this->date);
         $transaction->setHiddenFromForecast($this->hiddenFromForecast);
 
         return $transaction;

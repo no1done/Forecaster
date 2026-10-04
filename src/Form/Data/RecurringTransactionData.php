@@ -3,6 +3,7 @@
 namespace App\Form\Data;
 
 use App\Entity\RecurringTransaction;
+use App\Entity\User;
 use App\Forecast\Recurrence\Frequency;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -44,9 +45,9 @@ final class RecurringTransactionData
         return $data;
     }
 
-    public function toEntity(): RecurringTransaction
+    public function toEntity(User $owner): RecurringTransaction
     {
-        $recurring = new RecurringTransaction($this->description, $this->amountPence, $this->frequency, $this->startDate, $this->interval, $this->endDate);
+        $recurring = new RecurringTransaction($owner, $this->description, $this->amountPence, $this->frequency, $this->startDate, $this->interval, $this->endDate);
         $recurring->setHiddenFromForecast($this->hiddenFromForecast);
 
         return $recurring;

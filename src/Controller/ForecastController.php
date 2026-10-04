@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Clock\Today;
+use App\Entity\User;
 use App\Forecast\ForecastDay;
 use App\Forecast\Forecaster;
 use App\Form\Data\ForecastFilter;
@@ -12,14 +13,15 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 final class ForecastController extends AbstractController
 {
     #[Route('/', name: 'forecast', methods: ['GET'])]
-    public function index(Request $request, Forecaster $forecaster, BalanceCheckpointRepository $checkpoints, Today $today): Response
+    public function index(Request $request, Forecaster $forecaster, BalanceCheckpointRepository $checkpoints, Today $today, #[CurrentUser] User $user): Response
     {
         $today = $today->date();
-        $earliest = $checkpoints->findEarliest()?->getDate();
+        $earliest = $checkpoints->findEarliest($user)?->getDate();
         if (null === $earliest) {
             return $this->render('forecast/index.html.twig', ['days' => null, 'today' => $today]);
         }
@@ -34,7 +36,7 @@ final class ForecastController extends AbstractController
         $form->handleRequest($request);
 
         $range = $form->isSubmitted() && $form->isValid() ? $filter : $default;
-        $days = $forecaster->forecast($range->from, $range->to);
+        $days = $forecaster->forecast($user, $range->from, $range->to);
 
         $search = trim($filter->search ?? '');
         if ('' !== $search) {

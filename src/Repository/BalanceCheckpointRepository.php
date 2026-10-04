@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\BalanceCheckpoint;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,15 +17,17 @@ class BalanceCheckpointRepository extends ServiceEntityRepository
         parent::__construct($registry, BalanceCheckpoint::class);
     }
 
-    public function findEarliest(): ?BalanceCheckpoint
+    public function findEarliest(User $owner): ?BalanceCheckpoint
     {
-        return $this->findOneBy([], ['date' => 'ASC']);
+        return $this->findOneBy(['owner' => $owner], ['date' => 'ASC']);
     }
 
-    public function findLatestOnOrBefore(\DateTimeImmutable $date): ?BalanceCheckpoint
+    public function findLatestOnOrBefore(User $owner, \DateTimeImmutable $date): ?BalanceCheckpoint
     {
         return $this->createQueryBuilder('c')
-            ->where('c.date <= :date')
+            ->where('c.owner = :owner')
+            ->andWhere('c.date <= :date')
+            ->setParameter('owner', $owner)
             ->setParameter('date', $date)
             ->orderBy('c.date', 'DESC')
             ->setMaxResults(1)
@@ -35,10 +38,12 @@ class BalanceCheckpointRepository extends ServiceEntityRepository
     /**
      * @return list<BalanceCheckpoint>
      */
-    public function findBetween(\DateTimeImmutable $from, \DateTimeImmutable $to): array
+    public function findBetween(User $owner, \DateTimeImmutable $from, \DateTimeImmutable $to): array
     {
         return $this->createQueryBuilder('c')
-            ->where('c.date BETWEEN :from AND :to')
+            ->where('c.owner = :owner')
+            ->andWhere('c.date BETWEEN :from AND :to')
+            ->setParameter('owner', $owner)
             ->setParameter('from', $from)
             ->setParameter('to', $to)
             ->orderBy('c.date')
@@ -46,16 +51,16 @@ class BalanceCheckpointRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findOneOnDate(\DateTimeImmutable $date): ?BalanceCheckpoint
+    public function findOneOnDate(User $owner, \DateTimeImmutable $date): ?BalanceCheckpoint
     {
-        return $this->findOneBy(['date' => $date]);
+        return $this->findOneBy(['owner' => $owner, 'date' => $date]);
     }
 
     /**
      * @return list<BalanceCheckpoint>
      */
-    public function findNewestFirst(): array
+    public function findNewestFirst(User $owner): array
     {
-        return $this->findBy([], ['date' => 'DESC']);
+        return $this->findBy(['owner' => $owner], ['date' => 'DESC']);
     }
 }

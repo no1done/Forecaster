@@ -5,6 +5,7 @@ namespace App\Tests\Forecast;
 use App\Entity\AdHocTransaction;
 use App\Entity\BalanceCheckpoint;
 use App\Entity\RecurringTransaction;
+use App\Entity\User;
 use App\Forecast\ForecastDay;
 use App\Forecast\Forecaster;
 use App\Forecast\NoStartingBalance;
@@ -16,24 +17,26 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 final class ForecasterTest extends KernelTestCase
 {
     private EntityManagerInterface $em;
+    private int $userId;
 
     protected function setUp(): void
     {
         self::bootKernel();
         $this->em = self::getContainer()->get(EntityManagerInterface::class);
+        $this->userId = $this->createUser('me@example.com')->getId();
     }
 
     #[Test]
     public function itForecastsFromStoredCheckpointsRecurringAndAdHocTransactions(): void
     {
         $this->persist(
-            new BalanceCheckpoint(self::date('2026-10-01'), 10000),
-            new RecurringTransaction('Salary', 250000, Frequency::LastWorkingDayOfMonth, self::date('2026-01-01')),
-            new RecurringTransaction('Rent', -90000, Frequency::Monthly, self::date('2026-01-01')),
-            new AdHocTransaction('New tyres', -40000, self::date('2026-10-15')),
+            new BalanceCheckpoint($this->user(), self::date('2026-10-01'), 10000),
+            new RecurringTransaction($this->user(), 'Salary', 250000, Frequency::LastWorkingDayOfMonth, self::date('2026-01-01')),
+            new RecurringTransaction($this->user(), 'Rent', -90000, Frequency::Monthly, self::date('2026-01-01')),
+            new AdHocTransaction($this->user(), 'New tyres', -40000, self::date('2026-10-15')),
         );
 
-        $days = $this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-11-30'));
+        $days = $this->forecaster()->forecast($this->user(), self::date('2026-10-01'), self::date('2026-11-30'));
 
         self::assertCount(61, $days);
         $byDate = self::byDate($days);
@@ -49,12 +52,12 @@ final class ForecasterTest extends KernelTestCase
     public function aLaterCheckpointCorrectsTheForecast(): void
     {
         $this->persist(
-            new BalanceCheckpoint(self::date('2026-10-01'), 10000),
-            new BalanceCheckpoint(self::date('2026-11-02'), 125000),
-            new RecurringTransaction('Salary', 250000, Frequency::LastWorkingDayOfMonth, self::date('2026-01-01')),
+            new BalanceCheckpoint($this->user(), self::date('2026-10-01'), 10000),
+            new BalanceCheckpoint($this->user(), self::date('2026-11-02'), 125000),
+            new RecurringTransaction($this->user(), 'Salary', 250000, Frequency::LastWorkingDayOfMonth, self::date('2026-01-01')),
         );
 
-        $byDate = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-11-30')));
+        $byDate = self::byDate($this->forecaster()->forecast($this->user(), self::date('2026-10-01'), self::date('2026-11-30')));
 
         self::assertSame(260000, $byDate['2026-11-01']->balancePence);
         self::assertSame(125000, $byDate['2026-11-02']->balancePence);
@@ -65,11 +68,11 @@ final class ForecasterTest extends KernelTestCase
     public function recurringTransactionsStopAfterTheirEndDate(): void
     {
         $this->persist(
-            new BalanceCheckpoint(self::date('2026-10-01'), 10000),
-            new RecurringTransaction('Phone contract', -2500, Frequency::Monthly, self::date('2025-10-10'), endDate: self::date('2026-10-10')),
+            new BalanceCheckpoint($this->user(), self::date('2026-10-01'), 10000),
+            new RecurringTransaction($this->user(), 'Phone contract', -2500, Frequency::Monthly, self::date('2025-10-10'), endDate: self::date('2026-10-10')),
         );
 
-        $byDate = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-11-30')));
+        $byDate = self::byDate($this->forecaster()->forecast($this->user(), self::date('2026-10-01'), self::date('2026-11-30')));
 
         self::assertSame(7500, $byDate['2026-11-30']->balancePence);
     }
@@ -77,11 +80,11 @@ final class ForecasterTest extends KernelTestCase
     #[Test]
     public function aOneOffAmountChangesJustThatOccurrence(): void
     {
-        $rent = new RecurringTransaction('Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
+        $rent = new RecurringTransaction($this->user(), 'Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
         $rent->overrideAmount(self::date('2026-11-01'), -95000);
-        $this->persist(new BalanceCheckpoint(self::date('2026-10-01'), 300000), $rent);
+        $this->persist(new BalanceCheckpoint($this->user(), self::date('2026-10-01'), 300000), $rent);
 
-        $byDate = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-12-31')));
+        $byDate = self::byDate($this->forecaster()->forecast($this->user(), self::date('2026-10-01'), self::date('2026-12-31')));
 
         self::assertSame(-95000, $byDate['2026-10-30']->movements[0]->amountPence, 'November rent, paid early because the 1st is a Sunday');
         self::assertSame(205000, $byDate['2026-10-30']->balancePence);
@@ -92,11 +95,11 @@ final class ForecasterTest extends KernelTestCase
     #[Test]
     public function aZeroOneOffSkipsThatOccurrence(): void
     {
-        $gym = new RecurringTransaction('Gym', -3000, Frequency::Monthly, self::date('2026-01-15'));
+        $gym = new RecurringTransaction($this->user(), 'Gym', -3000, Frequency::Monthly, self::date('2026-01-15'));
         $gym->overrideAmount(self::date('2026-10-15'), 0);
-        $this->persist(new BalanceCheckpoint(self::date('2026-10-01'), 10000), $gym);
+        $this->persist(new BalanceCheckpoint($this->user(), self::date('2026-10-01'), 10000), $gym);
 
-        $byDate = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-11-30')));
+        $byDate = self::byDate($this->forecaster()->forecast($this->user(), self::date('2026-10-01'), self::date('2026-11-30')));
 
         self::assertSame(10000, $byDate['2026-10-15']->balancePence);
         self::assertSame(7000, $byDate['2026-11-16']->balancePence);
@@ -105,11 +108,11 @@ final class ForecasterTest extends KernelTestCase
     #[Test]
     public function aOneOffDateMovesJustThatOccurrence(): void
     {
-        $rent = new RecurringTransaction('Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
+        $rent = new RecurringTransaction($this->user(), 'Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
         $rent->moveOccurrence(self::date('2026-12-01'), self::date('2026-12-04'));
-        $this->persist(new BalanceCheckpoint(self::date('2026-10-01'), 300000), $rent);
+        $this->persist(new BalanceCheckpoint($this->user(), self::date('2026-10-01'), 300000), $rent);
 
-        $byDate = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2027-01-31')));
+        $byDate = self::byDate($this->forecaster()->forecast($this->user(), self::date('2026-10-01'), self::date('2027-01-31')));
 
         self::assertSame([], $byDate['2026-12-01']->movements);
         self::assertSame(210000, $byDate['2026-12-03']->balancePence);
@@ -124,12 +127,12 @@ final class ForecasterTest extends KernelTestCase
     #[Test]
     public function aOneOffDateCanMoveAnOccurrenceIntoOrOutOfTheRange(): void
     {
-        $rent = new RecurringTransaction('Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
+        $rent = new RecurringTransaction($this->user(), 'Rent', -90000, Frequency::Monthly, self::date('2026-01-01'));
         $rent->moveOccurrence(self::date('2026-11-01'), self::date('2026-12-02'));
         $rent->moveOccurrence(self::date('2026-12-01'), self::date('2026-11-27'));
-        $this->persist(new BalanceCheckpoint(self::date('2026-10-01'), 300000), $rent);
+        $this->persist(new BalanceCheckpoint($this->user(), self::date('2026-10-01'), 300000), $rent);
 
-        $byDate = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-11-30')));
+        $byDate = self::byDate($this->forecaster()->forecast($this->user(), self::date('2026-10-01'), self::date('2026-11-30')));
 
         self::assertSame([], $byDate['2026-10-30']->movements, 'November rent moved out to 2 Dec');
         self::assertEquals(self::date('2026-12-01'), $byDate['2026-11-27']->movements[0]->scheduledDate, 'December rent moved in');
@@ -139,13 +142,13 @@ final class ForecasterTest extends KernelTestCase
     #[Test]
     public function hiddenTransactionsStillCountTowardsTheBalance(): void
     {
-        $savings = new RecurringTransaction('Savings', -20000, Frequency::Monthly, self::date('2026-10-05'));
+        $savings = new RecurringTransaction($this->user(), 'Savings', -20000, Frequency::Monthly, self::date('2026-10-05'));
         $savings->setHiddenFromForecast(true);
-        $gift = new AdHocTransaction('Surprise present', -5000, self::date('2026-10-05'));
+        $gift = new AdHocTransaction($this->user(), 'Surprise present', -5000, self::date('2026-10-05'));
         $gift->setHiddenFromForecast(true);
-        $this->persist(new BalanceCheckpoint(self::date('2026-10-01'), 100000), $savings, $gift);
+        $this->persist(new BalanceCheckpoint($this->user(), self::date('2026-10-01'), 100000), $savings, $gift);
 
-        $day = self::byDate($this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-10-05')))['2026-10-05'];
+        $day = self::byDate($this->forecaster()->forecast($this->user(), self::date('2026-10-01'), self::date('2026-10-05')))['2026-10-05'];
 
         self::assertSame(75000, $day->balancePence);
         self::assertSame([], $day->visibleMovements());
@@ -158,7 +161,22 @@ final class ForecasterTest extends KernelTestCase
     {
         $this->expectException(NoStartingBalance::class);
 
-        $this->forecaster()->forecast(self::date('2026-10-01'), self::date('2026-11-30'));
+        $this->forecaster()->forecast($this->user(), self::date('2026-10-01'), self::date('2026-11-30'));
+    }
+
+    private function user(): User
+    {
+        return $this->em->getReference(User::class, $this->userId);
+    }
+
+    private function createUser(string $email): User
+    {
+        $user = new User();
+        $user->setEmail($email);
+        $user->setPassword('not used');
+        $this->persist($user);
+
+        return $user;
     }
 
     private function forecaster(): Forecaster

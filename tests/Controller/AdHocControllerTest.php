@@ -87,7 +87,7 @@ final class AdHocControllerTest extends BrowserTestCase
     #[Test]
     public function itEditsAPurchase(): void
     {
-        $this->persist($tyres = new AdHocTransaction('New tyres', -40000, self::date('2026-10-15')));
+        $this->persist($tyres = new AdHocTransaction($this->user(), 'New tyres', -40000, self::date('2026-10-15')));
 
         $this->client->request('GET', '/ad-hoc/'.$tyres->getId().'/edit');
         self::assertInputValueSame('ad_hoc[amountPence][amount]', '400.00');
@@ -101,8 +101,8 @@ final class AdHocControllerTest extends BrowserTestCase
     public function itListsUpcomingPurchases(): void
     {
         $this->persist(
-            new AdHocTransaction('Old purchase', -1000, self::date('2026-09-01')),
-            new AdHocTransaction('New tyres', -40000, self::date('2026-10-15')),
+            new AdHocTransaction($this->user(), 'Old purchase', -1000, self::date('2026-09-01')),
+            new AdHocTransaction($this->user(), 'New tyres', -40000, self::date('2026-10-15')),
         );
 
         $this->client->request('GET', '/ad-hoc');
@@ -116,7 +116,7 @@ final class AdHocControllerTest extends BrowserTestCase
     #[Test]
     public function itDeletesAPurchase(): void
     {
-        $this->persist(new AdHocTransaction('New tyres', -40000, self::date('2026-10-15')));
+        $this->persist(new AdHocTransaction($this->user(), 'New tyres', -40000, self::date('2026-10-15')));
 
         $this->client->request('GET', '/ad-hoc');
         // Without this marker the double-submit JS skips the field, and the delete is rejected once the session has used double-submit.
