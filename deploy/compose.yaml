@@ -1,0 +1,38 @@
+# Production stack for the Synology NAS. Copy this file and .env (from
+# .env.example) into one folder on the NAS; see deploy/README.md.
+services:
+  app:
+    image: ${APP_IMAGE:-ghcr.io/no1done/forecaster:latest}
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      APP_SECRET: ${APP_SECRET:?Set APP_SECRET in .env}
+      DEFAULT_URI: ${DEFAULT_URI:-http://localhost:8080}
+      DATABASE_URL: postgresql://app:${POSTGRES_PASSWORD}@database:5432/app?serverVersion=16&charset=utf8
+    ports:
+      - "${HTTP_PORT:-8080}:8080"
+    mem_limit: 256m
+
+  database:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    # Sized for a 1 GB NAS with one or two users
+    command: postgres -c shared_buffers=32MB -c work_mem=2MB -c maintenance_work_mem=16MB -c max_connections=20
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "app", "-U", "app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - database_data:/var/lib/postgresql/data
+    mem_limit: 256m
+
+volumes:
+  database_data:

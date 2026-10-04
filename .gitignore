@@ -495,3 +495,8 @@ composer.lock
 *.sass.map
 *.scss.map
 
+
+###> deploy ###
+/deploy/.env
+/deploy/backups/
+###< deploy ###
