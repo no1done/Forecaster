@@ -17,13 +17,27 @@ The NAS pulls that image and runs it next to Postgres.
    ```sh
    sudo -i
    mkdir -p /volume1/docker/forecaster && cd /volume1/docker/forecaster
+   chown <dsm-user> /volume1/docker/forecaster   # so you can copy files in (step 5)
    docker login ghcr.io -u no1done   # paste the token as the password
    ```
 
-5. Copy `compose.yaml`, `.env.example` and `backup.sh` into that folder,
-   e.g. through File Station. Then:
+5. Copy the three files from this `deploy/` folder onto the NAS. You don't
+   need to clone the repo: the NAS runs the image built by GitHub Actions,
+   so it only needs these files. From your computer, in the project root:
 
    ```sh
+   scp -O deploy/compose.yaml deploy/.env.example deploy/backup.sh \
+       <dsm-user>@<nas-ip>:/volume1/docker/forecaster/
+   ```
+
+   (`-O` uses the legacy scp protocol, which works even when SFTP is off in
+   DSM. Uploading the files through File Station into
+   `docker/forecaster` works too.)
+
+   Back in the root shell on the NAS:
+
+   ```sh
+   cd /volume1/docker/forecaster
    cp .env.example .env
    openssl rand -hex 32   # run twice: once for APP_SECRET, once for POSTGRES_PASSWORD
    vi .env                # fill in the two secrets and DEFAULT_URI
